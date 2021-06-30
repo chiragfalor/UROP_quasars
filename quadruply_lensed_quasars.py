@@ -52,8 +52,8 @@ class Circle(Conic):
         return (x_c, y_c)
 
     def plot(self):
-        x = np.linspace(-9, 9, 400)
-        y = np.linspace(-5, 5, 400)
+        x = np.linspace(-9, 9, 1000)
+        y = np.linspace(-5, 5, 1000)
         x, y = np.meshgrid(x, y)
         a, b, c, d, e, f = 1, 0, 1, self.coefficients[1], self.coefficients[2], self.coefficients[3]
         def axes():
@@ -122,19 +122,19 @@ class RectangularHyperbola(Conic):
         plt.show()
 
 
-    def plot_branch_1(self, color):
-        x = np.linspace(0, 1.5, 400)
-        y = np.linspace(0, 1.5, 400)
+    def plot_branch_1(self, color, linestyles='solid', zorder = -3):
+        x = np.linspace(0, 1.5, 1000)
+        y = np.linspace(0, 1.5, 1000)
         x, y = np.meshgrid(x, y)
         a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -2)
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -3, linestyles = linestyles)
 
-    def plot_branch_2(self, color):
-        x = np.linspace(-1.5, 1, 400)
-        y = np.linspace(-1.5, 1, 400)
+    def plot_branch_2(self, color, linestyles ='solid', zorder = -2, ymax = 0.9, xmax =0.01):
+        x = np.linspace(-1.5, xmax, 1000)
+        y = np.linspace(-1.5, ymax, 1000)
         x, y = np.meshgrid(x, y)
         a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -3)
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -2, linestyles = linestyles)
 
 
 
@@ -426,7 +426,10 @@ class Quasar(Conic):
       xs,ys = self.quasar_norm_array[:,0]*radius_ratio, self.quasar_norm_array[:,1]*radius_ratio
       cc = plt.Circle((0,0), radius_ratio , alpha=0.1, zorder = -4)
       # plot the points
-      plt.scatter(xs,ys,c='#d62728', marker = marker_shape, zorder = 2, s=100)
+      if marker_shape=='o':
+        plt.scatter(xs,ys,c='y', marker = marker_shape, zorder = 3, s=120)
+      else:
+        plt.scatter(xs,ys,c='#d62728', marker = marker_shape, zorder = 2, s=160)
       plt.gca().set_aspect('equal')
       plt.gca().add_artist( cc )
       # zip joins x and y coordinates in pairs
@@ -848,16 +851,24 @@ with open("quasar_ca_2.txt", "rb") as fp:   # Unpickling
 #plot_causticity_astroidal_angle(new_Quasar_list)
 
 print(result)
-result[2][0].plot2('o')
-result[2][0].quasar_hyperbola.plot_branch_1('c')
-result[2][0].quasar_hyperbola.plot_branch_2('m')
-result[3][0].plot2('s')
-result[3][0].quasar_hyperbola.plot_branch_1('c')
-result[3][0].quasar_hyperbola.plot_branch_2('m')
+result[0][0].plot2('o')
+result[0][0].quasar_hyperbola.plot_branch_1('c', 'dashed')
+result[0][0].quasar_hyperbola.plot_branch_2('m', 'dashed', xmax = 0.3)
+result[1][0].plot2('s')
+result[1][0].quasar_hyperbola.plot_branch_1('c', 'solid',-3)
+result[1][0].quasar_hyperbola.plot_branch_2('m', 'solid', -5, ymax =0.1, xmax =0.05)
 
+# result[2][0].plot2('o')
+# result[2][0].quasar_hyperbola.plot_branch_1('c', 'dashed')
+# result[2][0].quasar_hyperbola.plot_branch_2('m', 'dashed')
+# result[3][0].plot2('s')
+# result[3][0].quasar_hyperbola.plot_branch_1('c', 'solid',-3)
+# result[3][0].quasar_hyperbola.plot_branch_2('m', 'solid', -5, ymax =0.1)
+plt.scatter(0,0, s=120, marker='*', c= 'k')
 plt.axis('off')
+plt.savefig('wynne_schechter_construction_final_pi_4.pdf')
 plt.show()
-plt.savefig('wynne_schechter_construction_plot2.pdf')
+
 
 def contour_plot_causticity_astroidal_angle(Quasar_list):
   plt.rcParams.update({'font.size': 22})
