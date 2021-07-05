@@ -1,3 +1,5 @@
+from matplotlib.markers import MarkerStyle
+from copy import deepcopy
 import numpy as np
 from itertools import cycle
 import matplotlib.pyplot as plt
@@ -744,14 +746,14 @@ def all_Quasars_random():
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
-def plot_astroid(r, gamma = 0):
-  theta = np.linspace(0, np.pi/2, 2000)
+def plot_astroid(r, gamma = 0, mstyle = 'solid'):
+  theta = np.linspace(0, 2*np.pi, 2000)
 
   radius = r
 
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
-  plt.plot(a,b)
+  plt.plot(a,b, linestyle = mstyle)
   '''
   x = np.linspace(0.1, r, 4000)
   y = (r**(2/3) - x**(2/3))**3/2  
@@ -898,7 +900,7 @@ def Quasar_random_ca_plot_four_sided():
           print("theta_23 or ratio out of bounds")
       except:
            print("bad err")
-  with open("new_plot_ca.txt", "wb") as fp:   #Pickling
+  with open("new_plot_4ca.txt", "wb") as fp:   #Pickling
     pickle.dump(Quasar_list, fp)
   print(plotting_dictionary[(1, -np.pi/4)])
   return Quasar_list
@@ -1010,6 +1012,60 @@ def Quasar_random_shear_plot():
   print(Quasar_list)
   return Quasar_list
 
+def Quasar_random_ca_plot_final():
+  N = 50000
+  random.seed(2)
+  Quasar_list = []
+  max_causticity = 0.95
+  alpha_divisions = 5
+  plot_astroid(max_causticity)
+  plot_astroid(max_causticity/2)
+  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
+  error_ratio = (np.pi/2)**2
+  def rounding_error(a):
+      return abs(a-round(a))
+  for i in range(N):
+      del_1 = random.uniform(0, 10*np.pi)
+      del_2 = random.uniform(0, 10*np.pi)
+      a1 = del_1
+      a2 = del_1 + del_2
+      c1 = (2,0)
+      c2 = (1+np.cos(a1), np.sin(a1))
+      c3 = (1+np.cos(a2), np.sin(a2))
+      try:
+          Q = Quasar(c1, c2, c3)
+          Quasar_tuple = (Q, Q.causticity, Q.astroidal_angle)
+          #print(Q.theta_23, Q.ratio)
+          zeta =  Q.causticity
+          alpha = Q.astroidal_angle
+          for t in plotting_dictionary.keys():
+            err = (zeta-t[0])**2 + error_ratio*(alpha-t[1])**2
+            if t == (0,0):
+              err = (zeta-t[0])**2
+            if plotting_dictionary[t] == 0:
+                Quasar_list.append(Quasar_tuple)
+                ind = len(Quasar_list) - 1
+                plotting_dictionary[t] = (Q, ind, err)
+                break
+            else:
+                ind =  plotting_dictionary[t][1]
+                old_Q_err = plotting_dictionary[t][2]
+                if old_Q_err > err:
+                    Quasar_list[ind] = Quasar_tuple
+                    plotting_dictionary[t] = (Q, ind, err)
+                    break
+      except np.linalg.LinAlgError:
+          print("linalg err")
+      except KeyError:
+          print("theta_23 or ratio out of bounds")
+          print(t)
+      except:
+           print("bad err")
+  with open("new_plot_4ca_list.txt", "wb") as fp:   #Pickling
+    pickle.dump(Quasar_list, fp)
+  with open("new_plot_4ca_dict.txt", "wb") as fp:   #Pickling
+    pickle.dump(plotting_dictionary, fp)
+  return Quasar_list
 
 def Plot_quasars_shear(Quasar_list):
     i = 0
@@ -1055,6 +1111,87 @@ def Plot_quasars_shear(Quasar_list):
     ax1 = plt.gca()
     ax1.set_title("Max Causticity = "+str(max_causticity))
     plt.savefig('foo.pdf')
+    plt.show()
+
+
+def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
+    i = 0
+    fig_size = plt.rcParams["figure.figsize"]
+    fig_size[0] = 15
+    fig_size[1] = 15
+    plt.rcParams["figure.figsize"] = fig_size
+    #L = len(Quasar_list)
+    max_causticity = 0.95
+    plot_astroid(1)
+    plot_astroid(1/2, mstyle='dashed')
+    Tuple_1 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0], max_causticity, np.pi/2)
+    Q2=deepcopy(Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0])
+    Q2.quasar_rotator(-np.pi/2)
+    Tuple_2 = (Q2, max_causticity, np.pi)
+    Q3 = Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0]
+    Q3.quasar_rotator(np.pi)
+    Tuple_3 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0], max_causticity, -np.pi/4)
+    new_Quasar_list=[Tuple_1, Tuple_2, Tuple_3]
+    plt.annotate("$\phi_s$", # this is the text
+                        (1/20+0.02,1/20-0.03), # this is the point to label
+                        textcoords="offset points", # how to position the text
+                        xytext=(0,0), # distance from text to points (x,y)
+                        ha='center',
+                        size = 14)
+    #plt.arrow(0,0,0.5, 0.9)
+    plt.annotate("", xy=(0.5, 0.9), xytext=(0, -0.005), arrowprops=dict(arrowstyle="->"))
+    plt.annotate("", xy=(1.1, 0), xytext=(-0.001, 0), arrowprops=dict(arrowstyle="->"))
+    ac = matplotlib.patches.Arc((0,0), 0.25, 0.25, theta1 = 0, theta2 = 180*np.arctan(1.8)/np.pi)
+    plt.gca().add_artist( ac )
+    plt.annotate("$\zeta = 1/2$", # this is the text
+                        (1/4+0.11,1/4-0.15), # this is the point to label
+                        textcoords="offset points", # how to position the text
+                        xytext=(0,0), # distance from text to points (x,y)
+                        ha='center',
+                        size = 14)
+    plt.annotate("$\zeta = 1$", # this is the text
+                        (0.65,0.2), # this is the point to label
+                        textcoords="offset points", # how to position the text
+                        xytext=(0,0), # distance from text to points (x,y)
+                        ha='center',
+                        size = 14)
+    for Quasar_tuple in new_Quasar_list:
+        i += 1
+        Q, new_causticity, astroidal_angle = Quasar_tuple
+        radius_ratio = 1/10
+        xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + new_causticity*(np.cos(astroidal_angle))**3, Q.quasar_norm_array[:,1]*radius_ratio + new_causticity*(np.sin(astroidal_angle))**3
+        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.1)
+        # plot the points
+        plt.scatter(xs,ys,c='#d62728', marker = 'o')
+        plt.gca().set_aspect('equal')
+        plt.gca().add_artist( cc )
+        # zip joins x and y coordinates in pairs
+        j=0
+        '''
+        for x,y in zip(xs,ys):
+            j += 1
+            label = j
+            if j == 1:
+              offset = (8, -3)
+            elif j == 3:
+              offset = (0,5)
+            elif j==2:
+              offset = (8,-3)
+            elif j==4:
+              offset = (0, -15)
+            else:
+              raise(Exception("Why you hurt me in this way :("))
+            plt.annotate(label, # this is the text
+                        (x,y), # this is the point to label
+                        textcoords="offset points", # how to position the text
+                        xytext=offset, # distance from text to points (x,y)
+                        ha='center',
+                        size = 14)
+        '''
+    ax1 = plt.gca()
+    #ax1.set_title("Max Causticity = "+str(max_causticity))
+    plt.axis('off')
+    plt.savefig('4_sided_astroid.pdf')
     plt.show()
 
 def plot_quasars_shear_try2(Quasar_list):
@@ -1172,6 +1309,21 @@ def Quasar_random_shear_plot_try2():
 
 #Quasar_list = Quasar_random_shear_plot()
 
+#Quasar_list = Quasar_random_ca_plot_final()
+
+
+
+with open("new_plot_4ca_list.txt", "rb") as fp:   # Unpickling
+  new_Quasar_list = pickle.load(fp)
+
+with open("new_plot_4ca_dict.txt", "rb") as fp:   # Unpickling
+  new_plotting_dictionary = pickle.load(fp)
+
+
+print(new_plotting_dictionary[(0.95, np.pi/2)][1])
+Plot_quasars_4sided(new_Quasar_list, new_plotting_dictionary)
+
+'''
 with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 new_Quasar_list[2][0].plot()
@@ -1181,6 +1333,12 @@ ax.set_xlim(-1.05, 1)
 ax.set_ylim(-1.05,1)
 plt.savefig('Labeling_conv.pdf')
 plt.show()
+'''
+'''
+with open("new_plot_4ca.txt", "rb") as fp:   # Unpickling
+  new_Quasar_list = pickle.load(fp)
+Plot_Quasars_ca(new_Quasar_list)
+'''
 #plot_quasars_shear_try2(new_Quasar_list)
 
 '''
