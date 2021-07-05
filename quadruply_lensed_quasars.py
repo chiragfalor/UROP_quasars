@@ -1149,6 +1149,12 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
                         xytext=(0,0), # distance from text to points (x,y)
                         ha='center',
                         size = 14)
+    plt.annotate("$\psi = 0$", # this is the text
+                        (1.1,0.05), # this is the point to label
+                        textcoords="offset points", # how to position the text
+                        xytext=(0,0), # distance from text to points (x,y)
+                        ha='center',
+                        size = 14)
     plt.annotate("$\zeta = 1$", # this is the text
                         (0.65,0.2), # this is the point to label
                         textcoords="offset points", # how to position the text
