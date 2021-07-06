@@ -793,8 +793,9 @@ def contour_plot_causticity_astroidal_angle(Quasar_list):
 
 def Quasar_random_grid_angle_difference():
     global theta_23_err
-    N = 20000
+    N = 200000
     random.seed(3)
+    np.random.seed(3)
     Quasar_list = []
     theta_12_max = np.pi
     theta_12_min = 0
@@ -839,8 +840,26 @@ def angle_difference_contour_plot(Quasar_list):
   x=[]
   y=[]
   for i in range(len(causticity_array)):
-      x.append(causticity_array[i]*(np.cos(astroidal_angle_array[i]))**3)
-      y.append(causticity_array[i]*(np.sin(astroidal_angle_array[i]))**3)
+      x0 = causticity_array[i]*(np.cos(astroidal_angle_array[i]))**3
+      y0= causticity_array[i]*(np.sin(astroidal_angle_array[i]))**3
+      x.append(x0)
+      y.append(y0)
+      '''
+  for i in range(1000):
+    xr = random.random()
+    yr = random.random()
+    if xr**1.67 + yr**1.67 > 1:
+      x.append(xr)
+      y.append(yr)
+      theta_23_array = np.append(theta_23_array, np.nan)
+      theta_12_array = np.append(theta_12_array, np.nan)
+      '''
+  theta = np.linspace(0, np.pi/2, 2000)
+
+  a = (np.cos(theta))**3
+  b = (np.sin(theta))**3
+  plt.plot(a,b)
+  plt.fill(a,b ,'w', zorder = 3)
   '''
   astroidal = True
   if astroidal:
@@ -850,17 +869,14 @@ def angle_difference_contour_plot(Quasar_list):
   else:
     z = list(causticity_array)
   '''
-  theta_23_array = np.array(theta_23_array, dtype=float)
-  theta_12_array = np.array(theta_12_array, dtype=float)
+  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
+  theta_12_array = 180/np.pi*np.array(theta_12_array, dtype=float)
   ax2 = plt.gca()
   fig = plt.gcf()
-  print(theta_23_array[:10])
-  print(y[:10])
-  print(x[:10])
   #ax2.tricontour(x, y, theta_23_array, levels=14, linewidths=0.5, colors='k')
   #cntr2 = ax2.tricontourf(x, y, theta_23_array, levels=14, cmap="RdBu_r")
-  ax2.tricontour(x, y, theta_12_array, levels=14, linewidths=0.5, colors='k')
-  cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=14, cmap="RdBu_r")
+  plt.tricontour(x, y, theta_12_array, levels=9, linewidths=0.5, colors='k', zorder = 0)
+  cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=9, cmap="RdBu_r",zorder = -1)
   fig.colorbar(cntr2, ax=ax2)
   '''
   ax2.set_ylabel('Ratio')
@@ -870,7 +886,7 @@ def angle_difference_contour_plot(Quasar_list):
   else:
     ax2.set_title("Contour plot of causticity")
   '''
-  plt.savefig('angle_difference_contour_plot.pdf')
+  plt.savefig('angle_difference_theta_12_contour_plot.pdf')
   plt.show()
 
 def Quasar_random_ca_plot():
