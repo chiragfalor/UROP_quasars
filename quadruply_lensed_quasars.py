@@ -746,14 +746,17 @@ def all_Quasars_random():
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
-def plot_astroid(r, gamma = 0, mstyle = 'solid'):
+def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
   theta = np.linspace(0, 2*np.pi, 2000)
 
   radius = r
 
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
-  plt.plot(a,b, linestyle = mstyle)
+  plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
+  y = np.linspace(-0.03,0.03, 100)
+  x = r*np.ones_like(y)
+  plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
   '''
   x = np.linspace(0.1, r, 4000)
   y = (r**(2/3) - x**(2/3))**3/2  
@@ -1117,13 +1120,15 @@ def Plot_quasars_shear(Quasar_list):
 def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     i = 0
     fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 15
+    fig_size[0] = 10
+    fig_size[1] = 10
     plt.rcParams["figure.figsize"] = fig_size
     #L = len(Quasar_list)
     max_causticity = 0.95
     plot_astroid(1)
     plot_astroid(1/2, mstyle='dashed')
+    plot_astroid(1/4, mstyle='dashed')
+    plot_astroid(3/4, mstyle='dashed')
     Tuple_1 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0], max_causticity, np.pi/2)
     Q2=deepcopy(Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0])
     Q2.quasar_rotator(-np.pi/2)
@@ -1132,43 +1137,48 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     Q3.quasar_rotator(np.pi)
     Tuple_3 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0], max_causticity, -np.pi/4)
     new_Quasar_list=[Tuple_1, Tuple_2, Tuple_3]
-    plt.annotate("$\phi_s$", # this is the text
-                        (1/20+0.02,1/20-0.03), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=(0,0), # distance from text to points (x,y)
-                        ha='center',
-                        size = 14)
+
     #plt.arrow(0,0,0.5, 0.9)
-    plt.annotate("", xy=(0.5, 0.9), xytext=(0, -0.005), arrowprops=dict(arrowstyle="->"))
-    plt.annotate("", xy=(1.1, 0), xytext=(-0.001, 0), arrowprops=dict(arrowstyle="->"))
-    ac = matplotlib.patches.Arc((0,0), 0.25, 0.25, theta1 = 0, theta2 = 180*np.arctan(1.8)/np.pi)
+    #plt.annotate("", xy=(0.5, 0.9), xytext=(0, -0.005), arrowprops={"arrowstyle":"->", "width": 10})
+    ar1 = matplotlib.patches.FancyArrowPatch((0,0), (1, 0.3), arrowstyle = "->", mutation_scale = 40, linewidth = 3)
+    plt.gca().add_artist( ar1 )
+    ar2 = matplotlib.patches.FancyArrowPatch((0,0), (1.2, 0), arrowstyle = "->", mutation_scale = 40, linewidth = 3)
+    plt.gca().add_artist( ar2 )
+    #plt.annotate("", xy=(1.1, 0), xytext=(-0.001, 0), arrowprops=dict(arrowstyle="->"))
+    ac = matplotlib.patches.Arc((0,0), 1.6, 1.3, theta1 = 0, theta2 = 180*np.arctan(0.3)/np.pi, linewidth = 3)
     plt.gca().add_artist( ac )
-    plt.annotate("$\zeta = 1/2$", # this is the text
-                        (1/4+0.11,1/4-0.15), # this is the point to label
+    # plt.annotate("$\zeta = 1/2$", # this is the text
+    #                     (1/4+0.11,1/4-0.15), # this is the point to label
+    #                     textcoords="offset points", # how to position the text
+    #                     xytext=(0,0), # distance from text to points (x,y)
+    #                     ha='center',
+    #                     size = 14)
+    plt.annotate("$\phi_s$", # this is the text
+                        (0.88, 0.1), # this is the point to label
                         textcoords="offset points", # how to position the text
                         xytext=(0,0), # distance from text to points (x,y)
                         ha='center',
-                        size = 14)
-    plt.annotate("$\psi = 0$", # this is the text
-                        (1.1,0.05), # this is the point to label
+                        size = 30)
+    plt.annotate("      $\psi = 0$", # this is the text
+                        (1.1,0.07), # this is the point to label
                         textcoords="offset points", # how to position the text
                         xytext=(0,0), # distance from text to points (x,y)
                         ha='center',
-                        size = 14)
+                        size = 30)
     plt.annotate("$\zeta = 1$", # this is the text
-                        (0.65,0.2), # this is the point to label
+                        (0.35,0.6), # this is the point to label
                         textcoords="offset points", # how to position the text
                         xytext=(0,0), # distance from text to points (x,y)
                         ha='center',
-                        size = 14)
+                        size = 30)
     for Quasar_tuple in new_Quasar_list:
         i += 1
         Q, new_causticity, astroidal_angle = Quasar_tuple
-        radius_ratio = 1/10
+        radius_ratio = 1/5
         xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + new_causticity*(np.cos(astroidal_angle))**3, Q.quasar_norm_array[:,1]*radius_ratio + new_causticity*(np.sin(astroidal_angle))**3
-        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.1)
+        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.2, zorder = 0)
         # plot the points
-        plt.scatter(xs,ys,c='#d62728', marker = 'o')
+        plt.scatter(xs,ys,c='#d62728', marker = 'o', s=300, zorder = 2)
         plt.gca().set_aspect('equal')
         plt.gca().add_artist( cc )
         # zip joins x and y coordinates in pairs
@@ -1197,6 +1207,8 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     ax1 = plt.gca()
     #ax1.set_title("Max Causticity = "+str(max_causticity))
     plt.axis('off')
+    ax1.set_xlim(-1.2, 1.3)
+    ax1.set_ylim(-1.2,1.2)
     plt.savefig('4_sided_astroid.pdf')
     plt.show()
 
