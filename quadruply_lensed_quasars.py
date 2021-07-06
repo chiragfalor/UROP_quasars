@@ -148,6 +148,10 @@ class Quasar(Conic):
 
     self.theta_23 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[1])
 
+    self.theta_12 = self.angle_difference(self.configuration_angles[0], self.configuration_angles[1])
+
+    self.theta_34 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[3])
+
     self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
 
     #self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
@@ -342,7 +346,7 @@ class Quasar(Conic):
     x_sum = np.sum(self.quasar_norm_array[:,0])
     y_sum = np.sum(self.quasar_norm_array[:,1])
     alpha = np.arctan2(y_sum,x_sum)
-    alpha_new = np.arctan(np.tan(self.configuration_angles[1])*np.tan(self.configuration_angles[2])*np.tan((self.configuration_angles[1] + self.configuration_angles[2])/2))
+    alpha_new = np.arctan(np.cbrt(np.tan(self.configuration_angles[1])*np.tan(self.configuration_angles[2])*np.tan((self.configuration_angles[1] + self.configuration_angles[2])/2)))
     if self.configuration_angles[1]>np.pi/2:
       alpha_new += np.pi
     elif self.configuration_angles[1]<-np.pi/2:
@@ -787,6 +791,88 @@ def contour_plot_causticity_astroidal_angle(Quasar_list):
     ax2.set_title("Contour plot of causticity")
   plt.show()
 
+def Quasar_random_grid_angle_difference():
+    global theta_23_err
+    N = 20000
+    random.seed(3)
+    Quasar_list = []
+    theta_12_max = np.pi
+    theta_12_min = 0
+    theta_23_max = np.pi/2
+    theta_23_min = 0
+    def rounding_error(a):
+        return abs(a-round(a))
+    for i in range(N):
+        del_1 = random.uniform(0, 10*np.pi)
+        del_2 = random.uniform(0, 10*np.pi)
+        a1 = del_1
+        a2 = del_1 + del_2
+        c1 = (2,0)
+        c2 = (1+np.cos(a1), np.sin(a1))
+        c3 = (1+np.cos(a2), np.sin(a2))
+        try:
+            Q = Quasar(c1, c2, c3)
+            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.theta_12<theta_12_max and Q.theta_12>theta_12_min:
+              pass
+            else:
+              raise(KeyError)
+            Quasar_tuple = (Q, Q.theta_23, Q.theta_12, Q.causticity, Q.astroidal_angle)
+            Quasar_list.append(Quasar_tuple)
+        except np.linalg.LinAlgError:
+            print("linalg err")
+        except KeyError:
+            print("theta_23 or ratio out of bounds")
+            theta_23_err += 1
+        #except:
+         #   print("bad err")
+    Quasar_list = np.array(Quasar_list)
+    with open("angle_difference_list.txt", "wb") as fp:   #Pickling
+      pickle.dump(Quasar_list, fp)
+    return Quasar_list
+
+def angle_difference_contour_plot(Quasar_list):
+  plt.rcParams.update({'font.size': 22})
+  theta_23_array = np.array(Quasar_list[:,1])
+  theta_12_array = np.array(Quasar_list[:, 2])
+  causticity_array = np.array(Quasar_list[:, 3])
+  astroidal_angle_array = np.array(Quasar_list[:,4])
+  x=[]
+  y=[]
+  for i in range(len(causticity_array)):
+      x.append(causticity_array[i]*(np.cos(astroidal_angle_array[i]))**3)
+      y.append(causticity_array[i]*(np.sin(astroidal_angle_array[i]))**3)
+  '''
+  astroidal = True
+  if astroidal:
+    z=[]
+    for i in astroidal_angle_array:
+      z.append(np.arctan(np.cbrt(np.tan(i))))
+  else:
+    z = list(causticity_array)
+  '''
+  theta_23_array = np.array(theta_23_array, dtype=float)
+  theta_12_array = np.array(theta_12_array, dtype=float)
+  ax2 = plt.gca()
+  fig = plt.gcf()
+  print(theta_23_array[:10])
+  print(y[:10])
+  print(x[:10])
+  #ax2.tricontour(x, y, theta_23_array, levels=14, linewidths=0.5, colors='k')
+  #cntr2 = ax2.tricontourf(x, y, theta_23_array, levels=14, cmap="RdBu_r")
+  ax2.tricontour(x, y, theta_12_array, levels=14, linewidths=0.5, colors='k')
+  cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=14, cmap="RdBu_r")
+  fig.colorbar(cntr2, ax=ax2)
+  '''
+  ax2.set_ylabel('Ratio')
+  ax2.set_xlabel('$θ_{23}$ (radians)')
+  if astroidal:
+    ax2.set_title("Contour plot of astroidal angle")
+  else:
+    ax2.set_title("Contour plot of causticity")
+  '''
+  plt.savefig('angle_difference_contour_plot.pdf')
+  plt.show()
+
 def Quasar_random_ca_plot():
   N = 50000
   random.seed(2)
@@ -1010,7 +1096,6 @@ def Quasar_random_shear_plot():
   print(Quasar_list)
   return Quasar_list
 
-
 def Plot_quasars_shear(Quasar_list):
     i = 0
     fig_size = plt.rcParams["figure.figsize"]
@@ -1172,6 +1257,14 @@ def Quasar_random_shear_plot_try2():
 
 #Quasar_list = Quasar_random_shear_plot()
 
+#Quasar_list = Quasar_random_grid_angle_difference()
+
+with open("angle_difference_list.txt", "rb") as fp:   # Unpickling
+  new_Quasar_list = pickle.load(fp)
+
+angle_difference_contour_plot(new_Quasar_list)
+
+'''
 with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 new_Quasar_list[2][0].plot()
@@ -1182,7 +1275,7 @@ ax.set_ylim(-1.05,1)
 plt.savefig('Labeling_conv.pdf')
 plt.show()
 #plot_quasars_shear_try2(new_Quasar_list)
-
+'''
 '''
 with open("plot_quasars_shear.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
