@@ -1176,7 +1176,7 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
         Q, new_causticity, astroidal_angle = Quasar_tuple
         radius_ratio = 1/5
         xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + new_causticity*(np.cos(astroidal_angle))**3, Q.quasar_norm_array[:,1]*radius_ratio + new_causticity*(np.sin(astroidal_angle))**3
-        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.2, zorder = 0)
+        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.16, zorder = 0)
         # plot the points
         plt.scatter(xs,ys,c='#d62728', marker = 'o', s=300, zorder = 2)
         plt.gca().set_aspect('equal')
