@@ -66,6 +66,23 @@ class Circle(Conic):
         plt.plot(self.c3[0], self.c3[1], 'r+')
         plt.show()
 
+class AlignedEllipse(Conic):
+    def __init__(self, c1, c2, c3, c4):
+        '''
+        initialize a rectangular hyperbola in cartesian coordinates where c1, c2, c3, c4 are tuples of coordinates in the form of (x_i, y_i)
+        '''
+        self.c1 = c1
+        self.c2 = c2
+        self.c3 = c3
+        self.c4 = c4
+        equation_matrix = np.array([self.equation_maker_hyperbola(c1), self.equation_maker_hyperbola(c2), self.equation_maker_hyperbola(c3), self.equation_maker_hyperbola(c4)])
+        equation_solutions = np.array([1,1,1,1])
+        '''
+        Assumes that equation of rectangular hyperbola is of the form A(x^2 - y^2) + Bxy + Cx + Dy = 1 and solves the 4 equations got by substituting the 4 coordinates
+        '''
+        self.coefficients = np.linalg.solve(equation_matrix, equation_solutions)
+        self.center = self.findCenter()
+        self.equation = str(self.coefficients[0]) + "(x^2 - y^2) + " + str(self.coefficients[1]) + "xy + " + str(self.coefficients[2]) + "x + " + str(self.coefficients[3]) + "y = 1"
 
 
 class RectangularHyperbola(Conic):
