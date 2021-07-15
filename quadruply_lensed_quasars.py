@@ -343,8 +343,8 @@ class Quasar(Conic):
   def calculate_astroidal_angle(self):
     x_sum = np.sum(self.quasar_norm_array[:,0])
     y_sum = np.sum(self.quasar_norm_array[:,1])
-    alpha = np.arctan2(y_sum,x_sum)
-    alpha_new = np.arctan(np.tan(self.configuration_angles[1])*np.tan(self.configuration_angles[2])*np.tan((self.configuration_angles[1] + self.configuration_angles[2])/2))
+    alpha = np.arctan2(np.cbrt(y_sum),np.cbrt(x_sum))
+    alpha_new = np.arctan(np.cbrt(np.tan(self.configuration_angles[1])*np.tan(self.configuration_angles[2])*np.tan((self.configuration_angles[1] + self.configuration_angles[2])/2)))
     if self.configuration_angles[1]>np.pi/2:
       alpha_new += np.pi
     elif self.configuration_angles[1]<-np.pi/2:
