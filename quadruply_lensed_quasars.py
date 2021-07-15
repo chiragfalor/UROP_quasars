@@ -407,14 +407,19 @@ class Quasar(Conic):
     '''    
     x_sum = np.sum(self.quasar_norm_array[:,0])
     y_sum = np.sum(self.quasar_norm_array[:,1])
+    cos_sum = np.sum(np.cos(self.configuration_angles))
+    sin_sum = np.sum(np.sin(self.configuration_angles))
     causticity = (np.cbrt((x_sum/2)**(2)) + np.cbrt((y_sum/2)**(2)))**(3/2)
+    new_causticity = (np.cbrt((cos_sum/2)**(2)) + np.cbrt((sin_sum/2)**(2)))**(3/2)
     #print('Causticity', x_sum, y_sum, causticity)
-    return causticity
+    return new_causticity
 
   def calculate_new_causticity(self):
     t = self.configuration_angles
     theta_23 = self.angle_difference(t[1], t[2])
-    new_causticity = 2*np.sqrt((np.cos(t[1])*np.cos(t[2])*np.cos((t[1]+t[2])/2))**2+(np.sin(t[1])*np.sin(t[2])*np.sin((t[1]+t[2])/2))**2)/np.cos(theta_23/2)
+    cos_sum = (np.cos(t[1])*np.cos(t[2])*np.cos((t[1]+t[2])/2))/np.cos(theta_23/2)
+    sin_sum = (np.sin(t[1])*np.sin(t[2])*np.sin((t[1]+t[2])/2))/np.cos(theta_23/2)
+    new_causticity = (np.sqrt((np.cbrt(cos_sum))**2+(np.cbrt(sin_sum))**2))**3
     return new_causticity
 
 
@@ -430,7 +435,7 @@ class Quasar(Conic):
       alpha_new += np.pi
     elif self.configuration_angles[1]<-np.pi/2:
       alpha_new -= np.pi
-    return alpha_new
+    return alpha
 
   def property_checker(self):
     epsilon = 0.01
@@ -507,19 +512,65 @@ class NonCircularQuasar(Quasar):
     self.quasar_norm_array = np.array([self.c1, self.c2, self.c3, self.c4])
     self.sort_configuration()
     self.configuration_angles = np.arctan2(self.quasar_norm_array[:, 1], self.quasar_norm_array[:, 0])
-    self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
-    
 
     self.psi = self.psi_calculator()
 
     self.quasar_rotator(-self.psi)
+    
+    self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
     self.causticity = self.calculate_causticity()
     self.diff_WW_KK = self.WW_invariant_calculator(self.configuration_angles)
 
     self.new_causticity = self.calculate_new_causticity()
-    if (self.new_causticity-self.causticity)**2 > 0.00001:
+    if (self.new_causticity-self.causticity)**2 > 0.0001:
       print(self.new_causticity, self.causticity)
     self.astroidal_angle = self.calculate_astroidal_angle()
+
+  def plot(self):
+    radius_ratio = 1
+    xs,ys = self.quasar_norm_array[:,0]*radius_ratio, self.quasar_norm_array[:,1]*radius_ratio
+    cc = plt.Circle((0,0), radius_ratio , alpha=0.1)
+    # plot the points
+    plt.scatter(xs,ys,c='b', marker = 'o', s = 100)
+    plt.gca().set_aspect('equal')
+    plt.gca().add_artist( cc )
+    # zip joins x and y coordinates in pairs
+    j=0
+    for x,y in zip(xs,ys):
+        j += 1
+        label = j
+        if j == 1:
+          offset = (-15, -5)
+        elif j == 3:
+          offset = (0,7)
+        elif j==2:
+          offset = (15,-6)
+        elif j==4:
+          offset = (0, -25)
+        else:
+          raise(Exception("Why you hurt me in this way :("))
+        plt.annotate(label, # this is the text
+                    (x,y), # this is the point to label
+                    textcoords="offset points", # how to position the text
+                    xytext=offset, # distance from text to points (x,y)
+                    ha='center',
+                    size = 20)
+
+def plot_astroid(r, gamma = 0):
+  theta = np.linspace(0, 2*np.pi, 2000)
+
+  radius = r
+
+  a = (1+gamma)*radius*(np.cos(theta))**3
+  b = (1-gamma)*radius*(np.sin(theta))**3
+  plt.plot(a,b)
+  '''
+  x = np.linspace(0.1, r, 4000)
+  y = (r**(2/3) - x**(2/3))**3/2  
+  plt.plot(x,y)
+  plt.plot(y,x)
+  '''
+
 
 def AlignedEllipse_test():
   P1 = (2,1)
@@ -542,11 +593,132 @@ def AlignedEllipse_test():
   print(CQ.quasar_norm_array)
   print("CQ configuration invariant",CQ.configurationInvariant)
   print("CQ delta theta_23", CQ.diff_WW_KK)
-AlignedEllipse_test()
+  print("CQ causticity", CQ.causticity)
+  print("CQ new causticity", CQ.new_causticity)
+  NCQ.plot()
+  CQ.plot()
+  plt.show()
+#AlignedEllipse_test()
 
 def Saturn_Flash_test():
-    pass
+  NCQlist = []
+  S1P1 = (-14.1373417999757,3.5466025729274)
+  S1P2 = (-12.358667515963,1.5871018829614)
 
+  S2P1 = (-3.467548592968,4.2937233604296)
+  S2P2 = (-3.0360531925048,3.992103466708)
+  S2P3 = (-4.0176241335422,1.6496079065768)
+  S2P4 = (-5.6870476943574,3.5865672944457)
+  S2el = AlignedEllipse(S2P1, S2P2, S2P3, S2P4)
+  S2NCQ = NonCircularQuasar(S2el.normalized_coordinates)
+  NCQlist.append(S2NCQ)
+
+  S3P1 = (4.6350644506851,4.4069767685748)
+  S3P2 = (5.4704940775284,3.8834886762181)
+  S3P3 = (4.3267084510777,1.6783847255372)
+  S3P4 = (2.6917045461826,3.6862842578645)
+  S3el = AlignedEllipse(S3P1, S3P2, S3P3, S3P4)
+  S3NCQ = NonCircularQuasar(S3el.normalized_coordinates)
+  NCQlist.append(S3NCQ)
+
+
+  S4P1 = (12.8598857852702,4.5087039395151)
+  S4P2 = (13.9672698871411,3.8808057374234)
+  S4P3 = (12.6772244901162,1.6964810828739)
+  S4P4 = (11.0979653757643,3.7095607732165)
+  S4el = AlignedEllipse(S4P1, S4P2, S4P3, S4P4)
+  S4NCQ = NonCircularQuasar(S4el.normalized_coordinates)
+  NCQlist.append(S4NCQ)
+
+  S5P1 = (-12.4647508858568,-3.1512834278988)
+  S5P2 = (-11.1285512072286,-3.8669569399814)
+  S5P3 = (-12.5102561380701,-5.9726090651262)
+  S5P4 = (-14.0367505077724,-3.9331463977463)
+  S5el = AlignedEllipse(S5P1, S5P2, S5P3, S5P4)
+  S5NCQ = NonCircularQuasar(S5el.normalized_coordinates)
+  NCQlist.append(S5NCQ)
+  
+  S6P1 = (-4.2075604872552,-3.0972581702703)
+  S6P2 = (-2.6826384023429,-3.8967318846903)
+  S6P3 = (-4.1705478152913,-5.9176237739188)
+  S6P4 = (-5.6177432890795,-3.8708230143156)
+  S6el = AlignedEllipse(S6P1, S6P2, S6P3, S6P4)
+  S6NCQ = NonCircularQuasar(S6el.normalized_coordinates)
+  NCQlist.append(S6NCQ)
+  
+  S7P1 = (3.9946582328477,-3.0710086026352)
+  S7P2 = (5.7072048517478,-3.887526365575)
+  S7P3 = (4.1720291326624,-5.8967105238204)
+  S7P4 = (2.8,-3.8)
+  S7el = AlignedEllipse(S7P1, S7P2, S7P3, S7P4)
+  S7NCQ = NonCircularQuasar(S7el.normalized_coordinates)
+  NCQlist.append(S7NCQ)
+  
+  S8P1 = (12.2658019474332,-3.0372940406156)
+  S8P2 = (14.1597269205058,-3.8571594826451)
+  S8P3 = (12.5164158380099,-5.8298488213274)
+  S8P4 = (11.2203840038847,-3.7139515451727)
+  S8el = AlignedEllipse(S8P1, S8P2, S8P3, S8P4)
+  S8NCQ = NonCircularQuasar(S8el.normalized_coordinates)
+  NCQlist.append(S8NCQ)
+  
+  S9P1 = (-12.9501307596877,1.1973625586572)
+  S9P2 = (-10.9073727702795,0.3602323237821)
+  S9P3 = (-12.6,-1.6)
+  S9P4 = (-13.8353258884312,0.57652434619)
+  S9el = AlignedEllipse(S9P1, S9P2, S9P3, S9P4)
+  S9NCQ = NonCircularQuasar(S9el.normalized_coordinates)
+  NCQlist.append(S9NCQ)
+  
+  S10P1 = (-4.7412897890279,1.1668004500816)
+  S10P2 = (-2.4730267054778,0.3626670492244)
+  S10P3 = (-4.2102582978957,-1.5376670726126)
+  S10P4 = (-5.3747344963069,0.6623205335061)
+  S10el = AlignedEllipse(S10P1, S10P2, S10P3, S10P4)
+  S10NCQ = NonCircularQuasar(S10el.normalized_coordinates)
+  NCQlist.append(S10NCQ)
+  
+  S11P1 = (3.4889607025369,1.1305825110341)
+  S11P2 = (5.9287228979863,0.3744705131972)
+  S11P3 = (4.1042583202098,-1.4561164289343)
+  S11P4 = (3.0940682016423,0.8122195645765)
+  S11el = AlignedEllipse(S11P1, S11P2, S11P3, S11P4)
+  S11NCQ = NonCircularQuasar(S11el.normalized_coordinates)
+  NCQlist.append(S11NCQ)
+  
+  S12P1 = (12.4499638103098,-1.4208235547604)
+  S12P2 = (14.3336638415673,0.4203870021078)
+  xs_list = []
+  ys_list = []
+  newxs_list = []
+  newys_list = []
+  for i in range(len(NCQlist)):
+    NCQ = NCQlist[i]
+    print("configuration invariant of snapshot "+str(i+2)+" is "+str(NCQ.configurationInvariant))
+    print("d(Theta_23) of snapshot "+str(i+2)+" is "+str(NCQ.diff_WW_KK))
+    zeta = NCQ.causticity
+    nz = NCQ.new_causticity
+    alpha = NCQ.astroidal_angle
+    if i < 4:
+      xs_list.append(zeta*(np.cos(alpha))**3)
+      ys_list.append(-zeta*(np.sin(alpha))**3)
+      newxs_list.append(nz*(np.cos(alpha))**3)
+      newys_list.append(-nz*(np.sin(alpha))**3)      
+    else:
+      xs_list.append(-zeta*(np.sin(alpha))**3)
+      ys_list.append(-zeta*(np.cos(alpha))**3)
+      newxs_list.append(-nz*(np.sin(alpha))**3)
+      newys_list.append(-nz*(np.cos(alpha))**3)   
+  plot_astroid(1)
+  plt.scatter(xs_list,ys_list, c='b')
+  plt.gca().set_aspect('equal')
+  #plt.scatter(newxs_list,newys_list, c='r')
+  plt.savefig("Saturn_central_flash_trajectory.png")
+  plt.show()
+
+
+
+Saturn_Flash_test()
 
 
 def Quasar_test():
@@ -874,20 +1046,6 @@ def all_Quasars_random():
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
-def plot_astroid(r, gamma = 0):
-  theta = np.linspace(0, np.pi/2, 2000)
-
-  radius = r
-
-  a = (1+gamma)*radius*(np.cos(theta))**3
-  b = (1-gamma)*radius*(np.sin(theta))**3
-  plt.plot(a,b)
-  '''
-  x = np.linspace(0.1, r, 4000)
-  y = (r**(2/3) - x**(2/3))**3/2  
-  plt.plot(x,y)
-  plt.plot(y,x)
-  '''
 
 def contour_plot_causticity_astroidal_angle(Quasar_list):
   plt.rcParams.update({'font.size': 22})
