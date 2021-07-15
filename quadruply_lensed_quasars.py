@@ -233,11 +233,11 @@ class Quasar(Conic):
 
     self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
 
-    #self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
+    self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
 
     #self.separationInvariant = self.separation_invariant(self.quasar_norm_array)
 
-    #self.diff_WW_KK = self.WW_invariant_calculator(self.configuration_angles)
+    self.diff_WW_KK = self.WW_invariant_calculator(self.configuration_angles)
 
     self.causticity = self.calculate_causticity()
 
@@ -505,9 +505,10 @@ class NonCircularQuasar(Quasar):
     self.quasar_hyperbola = RectangularHyperbola(c1, c2, c3, c4)
     self.quasar_hyperbola_center = self.quasar_hyperbola.center
     self.quasar_norm_array = np.array([self.c1, self.c2, self.c3, self.c4])
+    self.sort_configuration()
     self.configuration_angles = np.arctan2(self.quasar_norm_array[:, 1], self.quasar_norm_array[:, 0])
     self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
-    self.sort_configuration()
+    
 
     self.psi = self.psi_calculator()
 
@@ -537,7 +538,10 @@ def AlignedEllipse_test():
   print("NCQ configuration invariant",NCQ.configurationInvariant)
   print("NCQ delta theta_23", NCQ.diff_WW_KK)
   print(NCQ.quasar_norm_array)
-
+  CQ = Quasar(el.normalized_coordinates[0], el.normalized_coordinates[1], el.normalized_coordinates[2])
+  print(CQ.quasar_norm_array)
+  print("CQ configuration invariant",CQ.configurationInvariant)
+  print("CQ delta theta_23", CQ.diff_WW_KK)
 AlignedEllipse_test()
 
 def Saturn_Flash_test():
