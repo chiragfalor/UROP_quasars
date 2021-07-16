@@ -722,6 +722,7 @@ def Saturn_Flash_test():
 #Saturn_Flash_test()
 
 def Saturn_main_plot():
+  gamma = 0.04
   NCQlist = []
   S1P1 = (-14.1373417999757,3.5466025729274)
   S1P2 = (-12.358667515963,1.5871018829614)
@@ -816,14 +817,14 @@ def Saturn_main_plot():
     zeta = NCQ.causticity
     alpha = NCQ.astroidal_angle
     if i < 4:
-      xs_list.append(zeta*(np.cos(alpha))**3)
-      ys_list.append(-zeta*(np.sin(alpha))**3)     
+      xs_list.append((1+gamma)*zeta*(np.cos(alpha))**3)
+      ys_list.append(-(1-gamma)*zeta*(np.sin(alpha))**3)     
     else:
-      xs_list.append(-zeta*(np.sin(alpha))**3)
-      ys_list.append(-zeta*(np.cos(alpha))**3) 
+      xs_list.append(-(1+gamma)*zeta*(np.sin(alpha))**3)
+      ys_list.append(-(1-gamma)*zeta*(np.cos(alpha))**3) 
   fig, ax = plt.subplots()
   theta = np.linspace(np.pi+0.7, 2*np.pi-0.7, 2000)
-  gamma = 0
+
   radius = 1
 
   a = (1+gamma)*radius*(np.cos(theta))**3
@@ -831,14 +832,26 @@ def Saturn_main_plot():
   ax.plot(a,b)
   ax.scatter(xs_list,ys_list, c='b')
   sn2 = plt.imread("Snapshot2.png")
-  #sn10 = plt.imread("Snapshot10.pdf")
-  image_extent = 1
-  ax.imshow(sn2,zorder =0,extent=[xs_list[0] - 0.1689*image_extent, xs_list[0]+0.1689*image_extent, ys_list[0]-0.0691*image_extent, ys_list[0]+0.0691*image_extent] )
+  sn10 = plt.imread("Snapshot10.png")
+  image_extent = 1.1
+  ax.imshow(sn2,zorder =0,extent=[xs_list[0] - 0.203*image_extent, xs_list[0]+0.203*image_extent, ys_list[0]-0.083*image_extent, ys_list[0]+0.083*image_extent] )
+  ax.imshow(sn10,zorder =0,extent=[xs_list[8] - 0.203*image_extent, xs_list[8]+0.203*image_extent, ys_list[8]-0.083*image_extent, ys_list[8]+0.083*image_extent] )
   plt.gca().set_aspect('equal')
+  #ax.set_xlim(-1.05, 1.05)
+  #ax.set_ylim(-1.05,1.05)
   ax.set_xlim(-0.7, 0.7)
   ax.set_ylim(-1.05,-0.2)
   #plt.scatter(newxs_list,newys_list, c='r')
-  plt.savefig("Saturn_main_plot.pdf")
+  def axes():
+      plt.axhline(0, alpha=.1)
+      plt.axvline(0, alpha=.1)
+  #axes()
+  Palomar_cut_1 = (-0.2832997890188,-0.4183658186403)
+  Palomar_cut_2 = (0.2055693729106,-0.5210741396101)
+  ax.scatter(Palomar_cut_1[0], Palomar_cut_1[1], c = 'r')
+  ax.scatter(Palomar_cut_2[0], Palomar_cut_2[1], c = 'r')
+  plt.axis('off')
+  plt.savefig("Saturn_main_plot.pdf", bbox_inches='tight',pad_inches = 0, dpi=1200)
   plt.show()
 
 Saturn_main_plot()
