@@ -162,6 +162,10 @@ class Quasar(Conic):
 
     self.astroidal_angle = self.calculate_astroidal_angle()
 
+    self.mag_array = [1,1,1,1]
+    for i in range(4):
+      self.mag_array[i] = 1/(np.cos(2*self.configuration_angles[i])+self.causticity*(np.cos(self.configuration_angles[i])*(np.cos(self.astroidal_angle))**3 + np.sin(self.configuration_angles[i])*(np.sin(self.astroidal_angle))**3))
+
     self.property_checker()
 
     t2 = self.configuration_angles[1]
@@ -759,14 +763,76 @@ def plot_astroid(r, gamma = 0):
   plt.plot(y,x)
   '''
 
-def contour_plot_causticity_astroidal_angle(Quasar_list):
+def Quasar_random_grid_angle_difference():
+    global theta_23_err
+    N = 300000
+    random.seed(3)
+    np.random.seed(3)
+    Quasar_list = []
+    theta_12_max = np.pi
+    theta_12_min = 0
+    theta_23_max = np.pi/2
+    theta_23_min = 0
+    def rounding_error(a):
+        return abs(a-round(a))
+    for i in range(N):
+        del_1 = random.uniform(0, 10*np.pi)
+        del_2 = random.uniform(0, 10*np.pi)
+        a1 = del_1
+        a2 = del_1 + del_2
+        c1 = (2,0)
+        c2 = (1+np.cos(a1), np.sin(a1))
+        c3 = (1+np.cos(a2), np.sin(a2))
+        try:
+            Q = Quasar(c1, c2, c3)
+            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.theta_12<theta_12_max and Q.theta_12>theta_12_min:
+              pass
+            else:
+              raise(KeyError)
+            Quasar_tuple = (Q, Q.theta_23, Q.theta_12, Q.causticity, Q.astroidal_angle)
+            Quasar_list.append(Quasar_tuple)
+        except np.linalg.LinAlgError:
+            print("linalg err")
+        except KeyError:
+            print("theta_23 or ratio out of bounds")
+            theta_23_err += 1
+        #except:
+         #   print("bad err")
+    Quasar_list = np.array(Quasar_list)
+    with open("angle_difference_list.txt", "wb") as fp:   #Pickling
+      pickle.dump(Quasar_list, fp)
+    return Quasar_list
+
+def angle_difference_contour_plot(Quasar_list):
   plt.rcParams.update({'font.size': 22})
-  theta_23_array = Quasar_list[:,1]
-  ratio_array = Quasar_list[:, 2]
-  causticity_array = Quasar_list[:, 3]
-  astroidal_angle_array = Quasar_list[:,4]
-  x = list(theta_23_array)
-  y = list(ratio_array)
+  theta_23_array = np.array(Quasar_list[:,1])
+  theta_12_array = np.array(Quasar_list[:, 2])
+  causticity_array = np.array(Quasar_list[:, 3])
+  astroidal_angle_array = np.array(Quasar_list[:,4])
+  x=[]
+  y=[]
+  for i in range(len(causticity_array)):
+      x0 = causticity_array[i]*(np.cos(astroidal_angle_array[i]))**3
+      y0= causticity_array[i]*(np.sin(astroidal_angle_array[i]))**3
+      x.append(x0)
+      y.append(y0)
+      '''
+  for i in range(1000):
+    xr = random.random()
+    yr = random.random()
+    if xr**1.67 + yr**1.67 > 1:
+      x.append(xr)
+      y.append(yr)
+      theta_23_array = np.append(theta_23_array, np.nan)
+      theta_12_array = np.append(theta_12_array, np.nan)
+      '''
+  theta = np.linspace(0, np.pi/2, 2000)
+
+  a = (np.cos(theta))**3
+  b = (np.sin(theta))**3
+  plt.plot(a,b)
+  plt.fill(a,b ,'w', zorder = 3)
+  '''
   astroidal = True
   if astroidal:
     z=[]
@@ -774,394 +840,69 @@ def contour_plot_causticity_astroidal_angle(Quasar_list):
       z.append(np.arctan(np.cbrt(np.tan(i))))
   else:
     z = list(causticity_array)
+  '''
+  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
+  theta_12_array = 180/np.pi*np.array(theta_12_array, dtype=float)
   ax2 = plt.gca()
   fig = plt.gcf()
-  ax2.tricontour(x, y, z, levels=14, linewidths=0.5, colors='k')
-  cntr2 = ax2.tricontourf(x, y, z, levels=14, cmap="RdBu_r")
+  #ax2.tricontour(x, y, theta_23_array, levels=9, linewidths=0.5, colors='k')
+  #cntr2 = ax2.tricontourf(x, y, theta_23_array, levels=9, cmap="RdBu_r")
+  plt.tricontour(x, y, theta_12_array, levels=18, linewidths=0.5, colors='k', zorder = 0)
+  cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=18, cmap="RdBu_r",zorder = -1)
   fig.colorbar(cntr2, ax=ax2)
+  '''
   ax2.set_ylabel('Ratio')
   ax2.set_xlabel('$θ_{23}$ (radians)')
   if astroidal:
     ax2.set_title("Contour plot of astroidal angle")
   else:
     ax2.set_title("Contour plot of causticity")
+  '''
+  plt.yticks([0, 0.25, 0.5, 0.75])
+  plt.yticks([0, 0.25, 0.5, 0.75])
+  plt.savefig('angle_difference_theta_12_contour_plot.pdf')
   plt.show()
 
-def Quasar_random_ca_plot():
-  N = 50000
-  random.seed(2)
-  Quasar_list = []
-  max_causticity = 0.95
-  alpha_divisions = 5
-  plot_astroid(max_causticity)
-  plot_astroid(max_causticity/2)
-  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
-  error_ratio = (np.pi/2)**2
-  def rounding_error(a):
-      return abs(a-round(a))
-  for i in range(N):
-      del_1 = random.uniform(0, 10*np.pi)
-      del_2 = random.uniform(0, 10*np.pi)
-      a1 = del_1
-      a2 = del_1 + del_2
-      c1 = (2,0)
-      c2 = (1+np.cos(a1), np.sin(a1))
-      c3 = (1+np.cos(a2), np.sin(a2))
-      try:
-          Q = Quasar(c1, c2, c3)
-          Quasar_tuple = (Q, Q.causticity, Q.astroidal_angle)
-          #print(Q.theta_23, Q.ratio)
-          zeta =  Q.causticity
-          alpha = Q.astroidal_angle
-          for t in plotting_dictionary.keys():
-            err = (zeta-t[0])**2 + error_ratio*(alpha-t[1])**2
-            if t == (0,0):
-              err = (zeta-t[0])**2
-            if plotting_dictionary[t] == 0:
-                Quasar_list.append(Quasar_tuple)
-                ind = len(Quasar_list) - 1
-                plotting_dictionary[t] = (Q, ind, err)
-                break
+
+def magnification_Quasars_random():
+    global theta_23_err
+    N = 300000
+    random.seed(3)
+    np.random.seed(3)
+    Quasar_list = []
+    theta_12_max = np.pi
+    theta_12_min = 0
+    theta_23_max = np.pi/2
+    theta_23_min = 0
+    def rounding_error(a):
+        return abs(a-round(a))
+    for i in range(N):
+        del_1 = random.uniform(0, 10*np.pi)
+        del_2 = random.uniform(0, 10*np.pi)
+        a1 = del_1
+        a2 = del_1 + del_2
+        c1 = (2,0)
+        c2 = (1+np.cos(a1), np.sin(a1))
+        c3 = (1+np.cos(a2), np.sin(a2))
+        try:
+            Q = Quasar(c1, c2, c3)
+            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.theta_12<theta_12_max and Q.theta_12>theta_12_min:
+              pass
             else:
-                ind =  plotting_dictionary[t][1]
-                old_Q_err = plotting_dictionary[t][2]
-                if old_Q_err > err:
-                    Quasar_list[ind] = Quasar_tuple
-                    plotting_dictionary[t] = (Q, ind, err)
-                    break
-      except np.linalg.LinAlgError:
-          print("linalg err")
-      except KeyError:
-          print("theta_23 or ratio out of bounds")
-          print(t)
-      except:
-           print("bad err")
-  with open("new_plot_ca.txt", "wb") as fp:   #Pickling
-    pickle.dump(Quasar_list, fp)
-  return Quasar_list
-
-def Quasar_random_ca_plot_four_sided():
-  N = 100000
-  Quasar_list = []
-  max_causticity = 1
-  alpha_divisions = 5
-  #plot_astroid(max_causticity)
-  #plot_astroid(max_causticity/2)
-  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.54):0, (max_causticity, np.pi/4):0, (max_causticity, 0.54):0, (max_causticity, np.pi/2):0, (max_causticity, np.pi - 0.54):0, (max_causticity, 3*np.pi/4):0, (max_causticity, np.pi/2 + 0.54):0, (max_causticity, np.pi):0, \
-                                                 (max_causticity, -np.pi/2 + 0.54):0, (max_causticity, -np.pi/4):0, (max_causticity, -0.54):0, (max_causticity, -np.pi/2):0, (max_causticity, -np.pi + 0.54):0, (max_causticity, -3*np.pi/4):0, (max_causticity, -np.pi/2-0.54):0, \
-                          (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0, (3*max_causticity/4, -np.pi/2):0, (3*max_causticity/4, np.pi):0, \
-                          (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, 3*np.pi/4):0,(max_causticity/2,np.pi):0,(max_causticity/2,np.pi/2):0, (max_causticity/2, -np.pi/4):0, (max_causticity/2, -np.pi/2):0, (max_causticity/2, -3*np.pi/4):0, \
-                          (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0,(max_causticity/4, np.pi):0, (max_causticity/4, -np.pi/2):0,\
-                          (0, 0):0}
-  error_ratio = (np.pi/2)**2
-  def rounding_error(a):
-      return abs(a-round(a))
-  for i in range(N):
-      del_1 = random.uniform(0, 10*np.pi)
-      del_2 = random.uniform(0, 10*np.pi)
-      a1 = del_1
-      a2 = del_1 + del_2
-      c1 = (2,0)
-      c2 = (1+np.cos(a1), np.sin(a1))
-      c3 = (1+np.cos(a2), np.sin(a2))
-      try:
-          Q = Quasar(c1, c2, c3)
-          Quasar_tuple = (Q, Q.causticity, Q.astroidal_angle)
-          #print(Q.theta_23, Q.ratio, Q.astroidal_angle, Q.configuration_angles[1])
-          zeta =  Q.causticity
-          alpha = Q.astroidal_angle
-          for t in plotting_dictionary.keys():
-            err = (zeta-t[0])**2 + error_ratio*(alpha-t[1])**2
-            if err != err:
-              print(alpha)
-              break
-            if t == (0,0):
-              err = (zeta-t[0])**2
-            if plotting_dictionary[t] == 0:
-                Quasar_list.append(Quasar_tuple)
-                ind = len(Quasar_list) - 1
-                plotting_dictionary[t] = (Q, ind, err)
-                #print(err)
-                break
-            else:
-                ind =  plotting_dictionary[t][1]
-                old_Q_err = plotting_dictionary[t][2]
-                if old_Q_err > err:
-                    Quasar_list[ind] = Quasar_tuple
-                    plotting_dictionary[t] = (Q, ind, err)
-                    #print(err)
-                    #print(old_Q_err)
-                    break
-      except np.linalg.LinAlgError:
-          print("linalg err")
-      except KeyError:
-          print("theta_23 or ratio out of bounds")
-      except:
-           print("bad err")
-  with open("new_plot_ca.txt", "wb") as fp:   #Pickling
-    pickle.dump(Quasar_list, fp)
-  print(plotting_dictionary[(1, -np.pi/4)])
-  return Quasar_list
-
-def Plot_Quasars_ca(Quasar_list):
-    i = 0
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 15
-    plt.rcParams["figure.figsize"] = fig_size
-    #L = len(Quasar_list)
-    max_causticity = 1
-    plot_astroid(max_causticity)
-    plot_astroid(max_causticity/2)
-    def p23(x):
-      return (np.cbrt(x))**2
-    for Quasar_tuple in Quasar_list:
-        i += 1
-        Q, causticity, astroidal_angle = Quasar_tuple
-        radius_ratio = 1/20
-        xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + causticity*np.cos(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 , Q.quasar_norm_array[:,1]*radius_ratio + causticity*np.sin(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 
-        cc = plt.Circle((causticity*np.cos(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 ,causticity*np.sin(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 ), radius_ratio , alpha=0.1)
-        # plot the points
-        plt.scatter(xs,ys,c='#d62728', marker = 'o')
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc )
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            if j == 1:
-              offset = (-8, -3)
-            elif j == 3:
-              offset = (5,3)
-            elif j==2:
-              offset = (8,-5)
-            elif j==4:
-              offset = (0, -15)
-            else:
-              raise(Exception("Why you hurt me in this way :("))
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=offset, # distance from text to points (x,y)
-                        ha='center',
-                        size = 14)
-    ax1 = plt.gca()
-    ax1.set_title("Max Causticity = "+str(max_causticity))
-    plt.savefig('foo.pdf')
-    plt.show()
-
-def Quasar_random_shear_plot():
-  '''
-  plot of quasars over astroid with non-zero shear
-  '''
-  N = 5000
-  random.seed(2)
-  shear = 1/3
-  Quasar_list = []
-  max_causticity = 0.95
-  alpha_divisions = 5
-  #plot_astroid(max_causticity)
-  #plot_astroid(max_causticity/2)
-  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.34):0, (max_causticity, np.pi/4):0, (max_causticity, 0.34):0, (3/4*max_causticity, 0.54):0, (3/4*max_causticity, np.pi/2-0.54):0,  (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
-  error_ratio = (2/np.pi)**2
-  def rounding_error(a):
-      return abs(a-round(a))
-  for i in range(N):
-      del_1 = random.uniform(0, 10*np.pi)
-      del_2 = random.uniform(0, 10*np.pi)
-      a1 = del_1
-      a2 = del_1 + del_2
-      c1 = (2,0)
-      c2 = (1+np.cos(a1), np.sin(a1))
-      c3 = (1+np.cos(a2), np.sin(a2))
-      try:
-          Q = Quasar(c1, c2, c3)
-          Quasar_tuple = (Q, Q.new_causticity, Q.astroidal_angle)
-          #print(Q.theta_23, Q.ratio)
-          zeta =  Q.new_causticity
-          alpha = Q.astroidal_angle
-          for t in plotting_dictionary.keys():
-            err = (zeta-t[0])**2 + error_ratio*(alpha-t[1])**2
-            if t == (0,0):
-              err = (zeta-t[0])**2
-            if plotting_dictionary[t] == 0:
-                Quasar_list.append(Quasar_tuple)
-                ind = len(Quasar_list) - 1
-                plotting_dictionary[t] = (Q, ind, err)
-                break
-            else:
-                ind =  plotting_dictionary[t][1]
-                old_Q_err = plotting_dictionary[t][2]
-                if old_Q_err > err:
-                    Quasar_list[ind] = Quasar_tuple
-                    plotting_dictionary[t] = (Q, ind, err)
-                    break
-      except np.linalg.LinAlgError:
-          print("linalg err")
-      except KeyError:
-          print("theta_23 or ratio out of bounds")
-          #print(t)
-      #except:
-       #    print("bad err")
-        #   raise(Exception("solve it"))
-  with open("plot_quasars_shear.txt", "wb") as fp:   #Pickling
-    pickle.dump(Quasar_list, fp)
-  print(Quasar_list)
-  return Quasar_list
-
-
-def Plot_quasars_shear(Quasar_list):
-    i = 0
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 15
-    plt.rcParams["figure.figsize"] = fig_size
-    #L = len(Quasar_list)
-    max_causticity = 0.95
-    plot_astroid(max_causticity, 1/3)
-    plot_astroid(max_causticity/2, 1/3)
-    for Quasar_tuple in Quasar_list:
-        i += 1
-        Q, new_causticity, astroidal_angle = Quasar_tuple
-        radius_ratio = 1/20
-        xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + new_causticity*np.cos(astroidal_angle), Q.quasar_norm_array[:,1]*radius_ratio + new_causticity*(np.sin(astroidal_angle))
-        cc = plt.Circle((new_causticity*(np.cos(astroidal_angle)) ,new_causticity*(np.sin(astroidal_angle)) ), radius_ratio , alpha=0.1)
-        # plot the points
-        plt.scatter(xs,ys,c='#d62728', marker = 'o')
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc )
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            if j == 1:
-              offset = (8, -3)
-            elif j == 3:
-              offset = (0,5)
-            elif j==2:
-              offset = (8,-3)
-            elif j==4:
-              offset = (0, -15)
-            else:
-              raise(Exception("Why you hurt me in this way :("))
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=offset, # distance from text to points (x,y)
-                        ha='center',
-                        size = 14)
-    ax1 = plt.gca()
-    ax1.set_title("Max Causticity = "+str(max_causticity))
-    plt.savefig('foo.pdf')
-    plt.show()
-
-def plot_quasars_shear_try2(Quasar_list):
-    i = 0
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 15
-    plt.rcParams["figure.figsize"] = fig_size
-    #L = len(Quasar_list)
-    max_causticity = 0.95
-    plot_astroid(max_causticity)
-    plot_astroid(max_causticity/2)
-    def p23(x):
-      return (np.cbrt(x))**2
-    for Quasar_tuple in Quasar_list:
-        i += 1
-        Q, causticity, astroidal_angle = Quasar_tuple
-        shear = -1/3
-        radius_ratio = 1/20
-        xs,ys = Q.quasar_norm_array[:,0]*radius_ratio/(1+shear) + causticity*np.cos(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 , Q.quasar_norm_array[:,1]*radius_ratio/(1-shear) + causticity*np.sin(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 
-        cc = matplotlib.patches.Ellipse((causticity*np.cos(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 ,causticity*np.sin(astroidal_angle)/(p23(np.sin(astroidal_angle))+p23(np.cos(astroidal_angle)))**1.5 ), 2*radius_ratio/(1+shear) , 2*radius_ratio/(1-shear), alpha=0.1)
-        # plot the points
-        plt.scatter(xs,ys,c='#d62728', marker = 'o')
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc )
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            if j == 1:
-              offset = (-8, -3)
-            elif j == 3:
-              offset = (5,3)
-            elif j==2:
-              offset = (8,-5)
-            elif j==4:
-              offset = (0, -15)
-            else:
-              raise(Exception("Why you hurt me in this way :("))
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=offset, # distance from text to points (x,y)
-                        ha='center',
-                        size = 14)
-    ax1 = plt.gca()
-    ax1.set_title("Max Causticity = "+str(max_causticity))
-    plt.savefig('foo.pdf')
-    plt.show()
-
-
-def Quasar_random_shear_plot_try2():
-  N = 5000
-  random.seed(2)
-  Quasar_list = []
-  shear = 1/3
-  max_causticity = 0.95
-  alpha_divisions = 5
-  plot_astroid(max_causticity)
-  plot_astroid(max_causticity/2)
-  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
-  error_ratio = (np.pi/2)**2
-  def rounding_error(a):
-      return abs(a-round(a))
-  for i in range(N):
-      del_1 = random.uniform(0, 10*np.pi)
-      del_2 = random.uniform(0, 10*np.pi)
-      a1 = del_1
-      a2 = del_1 + del_2
-      c1 = (2,0)
-      c2 = (1+np.cos(a1), np.sin(a1))
-      c3 = (1+np.cos(a2), np.sin(a2))
-      try:
-          Q = Quasar(c1, c2, c3)
-          Quasar_tuple = (Q, Q.causticity, Q.astroidal_angle)
-          #print(Q.theta_23, Q.ratio)
-          zeta =  Q.causticity
-          alpha = Q.astroidal_angle
-          for t in plotting_dictionary.keys():
-            err = (zeta-t[0])**2 + error_ratio*(alpha-t[1])**2
-            if t == (0,0):
-              err = (zeta-t[0])**2
-            if plotting_dictionary[t] == 0:
-                Quasar_list.append(Quasar_tuple)
-                ind = len(Quasar_list) - 1
-                plotting_dictionary[t] = (Q, ind, err)
-                break
-            else:
-                ind =  plotting_dictionary[t][1]
-                old_Q_err = plotting_dictionary[t][2]
-                if old_Q_err > err:
-                    Quasar_list[ind] = Quasar_tuple
-                    plotting_dictionary[t] = (Q, ind, err)
-                    break
-      except np.linalg.LinAlgError:
-          print("linalg err")
-      except KeyError:
-          print("theta_23 or ratio out of bounds")
-          print(t)
-      except:
-           print("bad err")
-  with open("new_plot_ca.txt", "wb") as fp:   #Pickling
-    pickle.dump(Quasar_list, fp)
-  return Quasar_list
-
-
+              raise(KeyError)
+            Quasar_tuple = (Q, Q.theta_23, Q.mag_array, Q.causticity, Q.astroidal_angle)
+            Quasar_list.append(Quasar_tuple)  
+        except np.linalg.LinAlgError:
+            print("linalg err")
+        except KeyError:
+            print("theta_23 or ratio out of bounds")
+            theta_23_err += 1
+        #except:
+         #   print("bad err")
+    Quasar_list = np.array(Quasar_list)
+    with open("magnification_list.txt", "wb") as fp:   #Pickling
+      pickle.dump(Quasar_list, fp)
+    return Quasar_list
 #Quasar_list = all_Quasars_random()
 
 #Quasar_list = Quasar_random_grid_plot_test()
@@ -1171,7 +912,7 @@ def Quasar_random_shear_plot_try2():
 #Quasar_list = Quasar_random_ca_plot_four_sided()
 
 #Quasar_list = Quasar_random_shear_plot()
-
+'''
 with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 new_Quasar_list[2][0].plot()
@@ -1182,7 +923,7 @@ ax.set_ylim(-1.05,1)
 plt.savefig('Labeling_conv.pdf')
 plt.show()
 #plot_quasars_shear_try2(new_Quasar_list)
-
+'''
 '''
 with open("plot_quasars_shear.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
