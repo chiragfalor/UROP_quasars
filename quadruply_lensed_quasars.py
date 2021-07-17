@@ -846,10 +846,11 @@ def Saturn_main_plot():
       plt.axhline(0, alpha=.1)
       plt.axvline(0, alpha=.1)
   #axes()
-  Palomar_cut_1 = (-0.2832997890188,-0.4183658186403)
-  Palomar_cut_2 = (0.2055693729106,-0.5210741396101)
-  ax.scatter(Palomar_cut_1[0], Palomar_cut_1[1], c = 'r')
-  ax.scatter(Palomar_cut_2[0], Palomar_cut_2[1], c = 'r')
+  Palomar_cut_x = [-0.2832997890188,0.2055693729106]
+  Palomar_cut_y = [-0.4183658186403,-0.5210741396101]
+  ax.plot(Palomar_cut_x, Palomar_cut_y, c = 'r', linestyle = 'dashed')
+  #ax.scatter(Palomar_cut_1[0], Palomar_cut_1[1], c = 'r')
+  #ax.scatter(Palomar_cut_2[0], Palomar_cut_2[1], c = 'r')
   plt.axis('off')
   plt.savefig("Saturn_main_plot.pdf", bbox_inches='tight',pad_inches = 0, dpi=1200)
   plt.show()
