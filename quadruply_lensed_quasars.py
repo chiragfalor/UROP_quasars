@@ -164,14 +164,13 @@ class Quasar(Conic):
 
     self.mag_array = [1,1,1,1]
     for i in range(4):
-      self.mag_array[i] = 1/(np.cos(2*self.configuration_angles[i])+self.causticity*(np.cos(self.configuration_angles[i])*(np.cos(self.astroidal_angle))**3 + np.sin(self.configuration_angles[i])*(np.sin(self.astroidal_angle))**3))
+      self.mag_array[i] = 1/(np.cos(2*self.configuration_angles[i])+self.causticity*(-np.cos(self.configuration_angles[i])*(np.cos(self.astroidal_angle))**3 + np.sin(self.configuration_angles[i])*(np.sin(self.astroidal_angle))**3))
 
     self.property_checker()
 
     t2 = self.configuration_angles[1]
     t3 = self.configuration_angles[2]
     self.fake_astroidal_angle = np.arctan((np.tan(t2)*np.tan(t3)*np.tan((t2+t3)/2)))
-
 
 
   
@@ -866,7 +865,7 @@ def angle_difference_contour_plot(Quasar_list):
 
 def magnification_Quasars_random():
     global theta_23_err
-    N = 300000
+    N = 500000
     random.seed(3)
     np.random.seed(3)
     Quasar_list = []
@@ -886,11 +885,9 @@ def magnification_Quasars_random():
         c3 = (1+np.cos(a2), np.sin(a2))
         try:
             Q = Quasar(c1, c2, c3)
-            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.theta_12<theta_12_max and Q.theta_12>theta_12_min:
-              pass
-            else:
+            if Q.theta_23>theta_23_max or Q.theta_23< theta_23_min:
               raise(KeyError)
-            Quasar_tuple = (Q, Q.theta_23, Q.mag_array, Q.causticity, Q.astroidal_angle)
+            Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
             Quasar_list.append(Quasar_tuple)  
         except np.linalg.LinAlgError:
             print("linalg err")
@@ -903,6 +900,112 @@ def magnification_Quasars_random():
     with open("magnification_list.txt", "wb") as fp:   #Pickling
       pickle.dump(Quasar_list, fp)
     return Quasar_list
+
+
+
+
+def magnification_contour_plot(Quasar_list):
+  plt.rcParams.update({'font.size': 22})
+  theta_23_array = np.array(Quasar_list[:,1])
+  Quasar_mag_0_array = np.log(np.array(Quasar_list[:, 2], dtype=float))
+  Quasar_mag_1_array = np.array(Quasar_list[:, 5])
+  Quasar_mag_2_array = np.array(Quasar_list[:, 6])
+  Quasar_mag_3_array = np.array(Quasar_list[:, 7])
+  causticity_array = np.array(Quasar_list[:, 3])
+  astroidal_angle_array = np.array(Quasar_list[:, 4])
+  position_angle_array = np.ones_like(causticity_array)
+  for i in range(len(causticity_array)):
+    if np.arctan(np.tan(astroidal_angle_array[i])**3) == np.arctan(np.tan(astroidal_angle_array[i])**3):
+      position_angle_array[i] = np.arctan(np.tan(astroidal_angle_array[i])**3)
+    else:
+      position_angle_array[i] = np.nan
+  x=list(causticity_array) #theta_23_array
+  y=list(position_angle_array)
+
+  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
+  print(np.shape(x))
+  print(np.shape(y))
+  print(np.shape(theta_23_array))
+  z = Quasar_mag_0_array
+  ax2 = plt.gca()
+  fig = plt.gcf()
+  ax2.tricontour(x, y, z, levels=9, linewidths=0.5, colors='k')
+  cntr2 = ax2.tricontourf(x, y, z, levels=9, cmap="RdBu_r", shading='auto', norm=matplotlib.colors.LogNorm(vmin=z.min(), vmax=z.max()))
+  #plt.tricontour(x, y, theta_12_array, levels=18, linewidths=0.5, colors='k', zorder = 0)
+  #cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=18, cmap="RdBu_r",zorder = -1)
+  fig.colorbar(cntr2, ax=ax2)
+  '''
+  ax2.set_ylabel('Ratio')
+  ax2.set_xlabel('$θ_{23}$ (radians)')
+  if astroidal:
+    ax2.set_title("Contour plot of astroidal angle")
+  else:
+    ax2.set_title("Contour plot of causticity")
+  '''
+  plt.savefig('mag_contour_plot.pdf')
+  plt.show()
+
+def magnification_separator(Quasar_list, phi_s, eps):
+  astroidal_angle_array = np.array(Quasar_list[:, 4])
+  new_Quasar_list = []
+  for i in range(len(Quasar_list)):
+    if 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > phi_s-eps:# and ((Quasar_list[i,2])**2+(Quasar_list[i,5])**2+(Quasar_list[i,6])**2+(Quasar_list[i,7])**2)<max_mag:
+      new_Quasar_list.append(Quasar_list[i])
+  new_Quasar_list = np.array(new_Quasar_list)
+  with open(f"magnification_{phi_s}list.txt", "wb") as fp:   #Pickling
+    pickle.dump(new_Quasar_list, fp)
+  return new_Quasar_list
+
+def magnification_plot(Quasar_list):
+  plt.rcParams.update({'font.size': 22})
+  theta_23_array = np.array(Quasar_list[:,1])
+  Quasar_mag_0_array = np.log(np.array(Quasar_list[:, 2], dtype=float))
+  Quasar_mag_1_array = np.array(Quasar_list[:, 5])
+  Quasar_mag_2_array = np.array(Quasar_list[:, 6])
+  Quasar_mag_3_array = np.array(Quasar_list[:, 7])
+  causticity_array = np.array(Quasar_list[:, 3])
+  astroidal_angle_array = np.array(Quasar_list[:, 4])
+  position_angle_array = np.ones_like(causticity_array)
+  for i in range(len(causticity_array)):
+    if np.arctan(np.tan(astroidal_angle_array[i])**3) == np.arctan(np.tan(astroidal_angle_array[i])**3):
+      position_angle_array[i] = np.arctan(np.tan(astroidal_angle_array[i])**3)
+    else:
+      position_angle_array[i] = np.nan
+  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
+  x=list(causticity_array) #theta_23_array
+  y=[list(Quasar_mag_0_array), list(Quasar_mag_1_array),list(Quasar_mag_2_array), list(Quasar_mag_3_array)]
+  for i in range(4):
+    plt.scatter(x, y[i], label = i+1)
+  plt.ylim(-5,5)
+
+
+
+phi_1_s = 5
+phi_2_s = 40
+
+#magnification_Quasars_random()
+'''
+with open("magnification_list.txt", "rb") as fp:   # Unpickling
+  new_Quasar_list = pickle.load(fp)
+
+print(np.shape(new_Quasar_list[0,0]))
+
+
+phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.1)
+print(len(phi_1_mag_list))
+
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.5)
+print(len(phi_2_mag_list))
+'''
+with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
+  phi_1_mag_list = pickle.load(fp)
+with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
+  phi_2_mag_list = pickle.load(fp)
+magnification_plot(phi_1_mag_list)
+magnification_plot(phi_2_mag_list)
+plt.legend(loc=2)
+plt.savefig("mag_plot_both.pdf")
+plt.show()
 #Quasar_list = all_Quasars_random()
 
 #Quasar_list = Quasar_random_grid_plot_test()
