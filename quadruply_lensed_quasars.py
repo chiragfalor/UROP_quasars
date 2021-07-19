@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 import pickle
+from scipy import interpolate
 
 #plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 #plt.rc('text', usetex=True)
@@ -907,7 +908,7 @@ def magnification_Quasars_random():
 def magnification_contour_plot(Quasar_list):
   plt.rcParams.update({'font.size': 22})
   theta_23_array = np.array(Quasar_list[:,1])
-  Quasar_mag_0_array = np.log(np.array(Quasar_list[:, 2], dtype=float))
+  Quasar_mag_0_array = np.array(Quasar_list[:, 2], dtype=float)
   Quasar_mag_1_array = np.array(Quasar_list[:, 5])
   Quasar_mag_2_array = np.array(Quasar_list[:, 6])
   Quasar_mag_3_array = np.array(Quasar_list[:, 7])
@@ -959,7 +960,7 @@ def magnification_separator(Quasar_list, phi_s, eps):
 def magnification_plot(Quasar_list):
   plt.rcParams.update({'font.size': 22})
   theta_23_array = np.array(Quasar_list[:,1])
-  Quasar_mag_0_array = np.log(np.array(Quasar_list[:, 2], dtype=float))
+  Quasar_mag_0_array = np.array(Quasar_list[:, 2], dtype=float)
   Quasar_mag_1_array = np.array(Quasar_list[:, 5])
   Quasar_mag_2_array = np.array(Quasar_list[:, 6])
   Quasar_mag_3_array = np.array(Quasar_list[:, 7])
@@ -972,11 +973,24 @@ def magnification_plot(Quasar_list):
     else:
       position_angle_array[i] = np.nan
   theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
-  x=list(causticity_array) #theta_23_array
+  ymax = 5
+  x=list(theta_23_array) #theta_23_array
   y=[list(Quasar_mag_0_array), list(Quasar_mag_1_array),list(Quasar_mag_2_array), list(Quasar_mag_3_array)]
+  '''
+  for j in range(4):
+    for i in range(len(y[j])):
+      if y[j][i]**2 > ymax**2:
+        y[j][i] = np.nan
+        #print('affected')
+  '''
+  ynew=[0,0,0,0]
   for i in range(4):
-    plt.scatter(x, y[i], label = i+1)
-  plt.ylim(-5,5)
+    tck = interpolate.splrep(x, y[i])
+    ynew[i] = interpolate.splev(x, tck, der=0)
+    plt.plot(x, ynew[i], label = i+1, linewidth = 5)
+  plt.ylim(-ymax,ymax)
+
+
 
 
 
@@ -989,7 +1003,6 @@ with open("magnification_list.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 
 print(np.shape(new_Quasar_list[0,0]))
-
 
 phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.1)
 print(len(phi_1_mag_list))
