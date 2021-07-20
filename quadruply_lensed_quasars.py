@@ -522,7 +522,9 @@ class NonCircularQuasar(Quasar):
     self.configuration_angles = np.arctan2(self.quasar_norm_array[:, 1], self.quasar_norm_array[:, 0])
 
     self.psi = self.psi_calculator()
-    print("psi", self.psi-np.pi/2)
+    self.new_psi = np.pi*np.around(2*self.psi/np.pi)/2
+    print("psi", self.psi)
+    print('new_psi', self.new_psi)
 
     self.quasar_rotator(-self.psi)
     
