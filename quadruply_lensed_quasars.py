@@ -103,6 +103,7 @@ class AlignedEllipse(Conic):
           centered_ellipse = AlignedEllipse(self.centered_ellipse_coordinates[0], self.centered_ellipse_coordinates[1],self.centered_ellipse_coordinates[2],self.centered_ellipse_coordinates[3], True)
           self.a = centered_ellipse.a
           self.b = centered_ellipse.b
+          print("a,b is ",self.a,self.b)
           self.parametric_angles = centered_ellipse.parametric_angles
         self.normalized_coordinates = list(map(self.coordinate_normalizer, self.centered_ellipse_coordinates))
           
@@ -423,6 +424,13 @@ class Quasar(Conic):
     return new_causticity
 
 
+  def calculate_new_astroidal_angle(self):
+    alpha_new = np.arctan(np.cbrt(np.tan(self.configuration_angles[1])*np.tan(self.configuration_angles[2])*np.tan((self.configuration_angles[1] + self.configuration_angles[2])/2)))
+    if self.configuration_angles[1]>np.pi/2:
+      alpha_new += np.pi
+    elif self.configuration_angles[1]<-np.pi/2:
+      alpha_new -= np.pi
+    return alpha_new
 
 
 
@@ -514,6 +522,7 @@ class NonCircularQuasar(Quasar):
     self.configuration_angles = np.arctan2(self.quasar_norm_array[:, 1], self.quasar_norm_array[:, 0])
 
     self.psi = self.psi_calculator()
+    print("psi", self.psi-np.pi/2)
 
     self.quasar_rotator(-self.psi)
     
@@ -522,8 +531,9 @@ class NonCircularQuasar(Quasar):
     self.diff_WW_KK = self.WW_invariant_calculator(self.configuration_angles)
 
     self.new_causticity = self.calculate_new_causticity()
-    if (self.new_causticity-self.causticity)**2 > 0.0001:
-      print(self.new_causticity, self.causticity)
+    #if (self.new_causticity-self.causticity)**2 > 0.0001:
+     # print(self.new_causticity, self.causticity)
+    self.new_astroidal_angle = self.calculate_new_astroidal_angle()
     self.astroidal_angle = self.calculate_astroidal_angle()
 
   def plot(self):
@@ -722,7 +732,7 @@ def Saturn_Flash_test():
 #Saturn_Flash_test()
 
 def Saturn_main_plot():
-  gamma = 0.04
+  gamma = 0.04/1.04
   NCQlist = []
   S1P1 = (-14.1373417999757,3.5466025729274)
   S1P2 = (-12.358667515963,1.5871018829614)
@@ -814,8 +824,8 @@ def Saturn_main_plot():
   ys_list = []
   for i in range(len(NCQlist)):
     NCQ = NCQlist[i]
-    zeta = NCQ.causticity
-    alpha = NCQ.astroidal_angle
+    zeta = NCQ.new_causticity
+    alpha = NCQ.new_astroidal_angle
     if i < 4:
       xs_list.append((1+gamma)*zeta*(np.cos(alpha))**3)
       ys_list.append(-(1-gamma)*zeta*(np.sin(alpha))**3)     
@@ -852,7 +862,7 @@ def Saturn_main_plot():
   #ax.scatter(Palomar_cut_1[0], Palomar_cut_1[1], c = 'r')
   #ax.scatter(Palomar_cut_2[0], Palomar_cut_2[1], c = 'r')
   plt.axis('off')
-  plt.savefig("Saturn_main_plot.pdf", bbox_inches='tight',pad_inches = 0, dpi=1200)
+  plt.savefig("Saturn_main_plot_new.png", bbox_inches='tight',pad_inches = 0, dpi=1200)
   plt.show()
 
 Saturn_main_plot()
