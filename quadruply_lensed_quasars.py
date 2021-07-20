@@ -6,6 +6,8 @@ import matplotlib
 import random
 import pickle
 from scipy import interpolate
+from scipy import ndimage
+from labellines import labelLines
 
 #plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 #plt.rc('text', usetex=True)
@@ -958,10 +960,10 @@ def magnification_separator(Quasar_list, phi_s, eps):
     pickle.dump(new_Quasar_list, fp)
   return new_Quasar_list
 
-def magnification_plot(Quasar_list):
+def magnification_plot(Quasar_list, color):
   plt.rcParams.update({'font.size': 22})
   def keyfunc(narray):
-    return narray[1]
+    return narray[3]
   Quasar_list = Quasar_list[np.apply_along_axis(keyfunc, axis=1, arr=Quasar_list).argsort()]
   #dtype = [('angles', object), ('theta_23', float), ('mag0', float), ('causticity_array', float), ('alpha', float), ('mag1', float), ('mag2', float), ('mag3', float)]
   #new_Quasar_list = np.array(Quasar_list, dtype=dtype)
@@ -981,8 +983,9 @@ def magnification_plot(Quasar_list):
       position_angle_array[i] = np.nan
   theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
   ymax = 5
-  x=list(theta_23_array) #theta_23_array
-  y=[list(Quasar_mag_0_array), list(Quasar_mag_1_array),list(Quasar_mag_2_array), list(Quasar_mag_3_array)]
+  #x = list(theta_23_array)
+  x = list(causticity_array)
+  y = [list(Quasar_mag_0_array), list(Quasar_mag_1_array),list(Quasar_mag_2_array), list(Quasar_mag_3_array)]
   '''
   for j in range(4):
     for i in range(len(y[j])):
@@ -994,10 +997,70 @@ def magnification_plot(Quasar_list):
   for i in range(4):
     tck = interpolate.splrep(x, y[i])
     ynew[i] = interpolate.splev(x, tck, der=0)
-    plt.plot(x, ynew[i], label = i+1, linewidth = 2)
+    plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=color)
   plt.ylim(-ymax,ymax)
 
+'''
+def my_legend(axis = None):
 
+    if axis == None:
+        axis = plt.gca()
+
+    N = 32
+    Nlines = len(axis.lines)
+    print(Nlines)
+
+    xmin, xmax = axis.get_xlim()
+    ymin, ymax = axis.get_ylim()
+
+    # the 'point of presence' matrix
+    pop = np.zeros((Nlines, N, N), dtype=np.float)    
+
+    for l in range(Nlines):
+        # get xy data and scale it to the NxN squares
+        xy = axis.lines[l].get_xydata()
+        xy = (xy - [xmin,ymin]) / ([xmax-xmin, ymax-ymin]) * N
+        xy = xy.astype(np.int32)
+        # mask stuff outside plot        
+        mask = (xy[:,0] >= 0) & (xy[:,0] < N) & (xy[:,1] >= 0) & (xy[:,1] < N)
+        xy = xy[mask]
+        # add to pop
+        for p in xy:
+            pop[l][tuple(p)] = 1.0
+
+    # find whitespace, nice place for labels
+    ws = 1.0 - (np.sum(pop, axis=0) > 0) * 1.0 
+    # don't use the borders
+    ws[:,0]   = 0
+    ws[:,N-1] = 0
+    ws[0,:]   = 0  
+    ws[N-1,:] = 0  
+
+    # blur the pop's
+    for l in range(Nlines):
+        pop[l] = ndimage.gaussian_filter(pop[l], sigma=N/5)
+
+    for l in range(Nlines):
+        # positive weights for current line, negative weight for others....
+        w = -0.3 * np.ones(Nlines, dtype=np.float)
+        w[l] = 0.5
+
+        # calculate a field         
+        p = ws + np.sum(w[:, np.newaxis, np.newaxis] * pop, axis=0)
+        plt.figure()
+        plt.imshow(p, interpolation='nearest')
+        plt.title(axis.lines[l].get_label())
+
+        pos = np.argmax(p)  # note, argmax flattens the array first 
+        best_x, best_y =  (pos / N, pos % N) 
+        x = xmin + (xmax-xmin) * best_x / N       
+        y = ymin + (ymax-ymin) * best_y / N       
+
+
+        axis.text(x, y, axis.lines[l].get_label(), 
+                  horizontalalignment='center',
+                  verticalalignment='center')
+'''
 
 
 
@@ -1021,10 +1084,20 @@ with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
 with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
   phi_2_mag_list = pickle.load(fp)
-magnification_plot(phi_1_mag_list)
-magnification_plot(phi_2_mag_list)
-plt.legend(loc=2)
-plt.savefig("mag_plot_both.pdf")
+magnification_plot(phi_1_mag_list, 'r')
+magnification_plot(phi_2_mag_list, 'g')
+#labelLines(plt.gca().get_lines(), zorder=2.5, align=False, color='k', xvals = (10,90))
+#plt.legend(loc=2)
+#my_legend()
+'''
+plt.annotate(1, # this is the text
+            (10,1), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 20)
+            '''
+plt.savefig("mag_plot_both_causticity.pdf")
 plt.show()
 #Quasar_list = all_Quasars_random()
 
