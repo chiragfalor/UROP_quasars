@@ -1,3 +1,4 @@
+from matplotlib.contour import QuadContourSet
 import numpy as np
 from itertools import cycle
 import matplotlib.pyplot as plt
@@ -959,6 +960,12 @@ def magnification_separator(Quasar_list, phi_s, eps):
 
 def magnification_plot(Quasar_list):
   plt.rcParams.update({'font.size': 22})
+  def keyfunc(narray):
+    return narray[1]
+  Quasar_list = Quasar_list[np.apply_along_axis(keyfunc, axis=1, arr=Quasar_list).argsort()]
+  #dtype = [('angles', object), ('theta_23', float), ('mag0', float), ('causticity_array', float), ('alpha', float), ('mag1', float), ('mag2', float), ('mag3', float)]
+  #new_Quasar_list = np.array(Quasar_list, dtype=dtype)
+  #Quasar_list = np.sort(Quasar_list, order=1)
   theta_23_array = np.array(Quasar_list[:,1])
   Quasar_mag_0_array = np.array(Quasar_list[:, 2], dtype=float)
   Quasar_mag_1_array = np.array(Quasar_list[:, 5])
@@ -987,7 +994,7 @@ def magnification_plot(Quasar_list):
   for i in range(4):
     tck = interpolate.splrep(x, y[i])
     ynew[i] = interpolate.splev(x, tck, der=0)
-    plt.plot(x, ynew[i], label = i+1, linewidth = 5)
+    plt.plot(x, ynew[i], label = i+1, linewidth = 2)
   plt.ylim(-ymax,ymax)
 
 
