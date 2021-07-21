@@ -104,6 +104,7 @@ class AlignedEllipse(Conic):
           self.a = centered_ellipse.a
           self.b = centered_ellipse.b
           print("a,b is ",self.a,self.b)
+          print("a/b is", self. a/self.b)
           self.parametric_angles = centered_ellipse.parametric_angles
         self.normalized_coordinates = list(map(self.coordinate_normalizer, self.centered_ellipse_coordinates))
           
@@ -864,7 +865,7 @@ def Saturn_main_plot():
   #ax.scatter(Palomar_cut_1[0], Palomar_cut_1[1], c = 'r')
   #ax.scatter(Palomar_cut_2[0], Palomar_cut_2[1], c = 'r')
   plt.axis('off')
-  plt.savefig("Saturn_main_plot_new.png", bbox_inches='tight',pad_inches = 0, dpi=1200)
+  plt.savefig("Saturn_main_plot_new.pdf", bbox_inches='tight',pad_inches = 0, dpi=1200)
   plt.show()
 
 Saturn_main_plot()
