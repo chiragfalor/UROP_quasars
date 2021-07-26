@@ -1024,14 +1024,21 @@ def magnification_plot(Quasar_list, color, iflabel=False):
     else:
       raise(Exception('color not defined'))
   ynew=[0,0,0,0]
+  def smooth(i):
+    if i ==0 or i==3:
+      return 2.4
+    elif i == 2 or i ==1:
+      return 100
+    else:
+      raise(Exception())
   if iflabel:
     for i in range(4):
-      tck = interpolate.splrep(x, y[i])
+      tck = interpolate.splrep(x, y[i], s=smooth(i))
       ynew[i] = interpolate.splev(x, tck, der=0)
       plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
   else:
     for i in range(4):
-      tck = interpolate.splrep(x, y[i])
+      tck = interpolate.splrep(x, y[i], s=10)
       ynew[i] = interpolate.splev(x, tck, der=0)
       plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
     #plt.scatter(x, y[i], label = i+1)
@@ -1040,13 +1047,13 @@ def magnification_plot(Quasar_list, color, iflabel=False):
   ax.set_yscale('log')
   ax.set_xscale('log')
   plt.xlim(100,1)
-  plt.ylim(0.4,100)
+  plt.ylim(0.3,100)
   plt.gca().set_aspect('equal')
 
 
 
-phi_1_s = 5
-phi_2_s = 40
+phi_1_s = 2
+phi_2_s = 30
 
 #magnification_Quasars_random()
 '''
@@ -1070,7 +1077,7 @@ magnification_plot(phi_2_mag_list, 'g')
 #labelLines(plt.gca().get_lines(), zorder=2.5, align=False, color='k', xvals = (10,90))
 plt.legend(loc=2)
 #my_legend()
-
+'''
 plt.annotate('$\phi_s = 40°$', # this is the text
             (1.8,18), # this is the point to label
             textcoords="offset points", # how to position the text
@@ -1106,14 +1113,49 @@ plt.annotate('$\phi_s = 5°$', # this is the text
             ha='center',
             size = 22,
             weight='bold')
-
+'''
+plt.annotate('$\phi_s = 30°$', # this is the text
+            (1.8,20), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 22,
+            weight='bold')
+plt.annotate('$\phi_s = 30°$', # this is the text
+            (2,1), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 22,
+            weight='bold')
+plt.annotate('$\phi_s = 2°$', # this is the text
+            (2,1.9), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 22,
+            weight='bold')
+plt.annotate('$\phi_s = 2°$', # this is the text
+            (2,0.4), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 22,
+            weight='bold')
+plt.annotate('$\phi_s = 2°$', # this is the text
+            (6,40), # this is the point to label
+            textcoords="offset points", # how to position the text
+            xytext=(0,0), # distance from text to points (x,y)
+            ha='center',
+            size = 22,
+            weight='bold')
 ax = plt.gca()
 plt.xlabel(r'$\theta_{23}$ in degrees')
 
 plt.ylabel(r'$\left|\frac{\mu_i}{\mu^{sq}_i}\right|$', rotation=0, size = 32)
-ax.yaxis.set_label_coords(-0.1, 0.25)
+ax.yaxis.set_label_coords(-0.2, 0.25)
 
-plt.savefig("mag_plot_modified_with_1and4.pdf")
+plt.savefig("mag_plot_modified_with_1and4_more_smoothening_2_30.pdf")
 plt.show()
 #Quasar_list = all_Quasars_random()
 
