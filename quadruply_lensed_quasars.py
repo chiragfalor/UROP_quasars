@@ -963,7 +963,7 @@ def magnification_separator(Quasar_list, phi_s, eps):
     if 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > phi_s-eps:# and ((Quasar_list[i,2])**2+(Quasar_list[i,5])**2+(Quasar_list[i,6])**2+(Quasar_list[i,7])**2)<max_mag:
       new_Quasar_list.append(Quasar_list[i])
   new_Quasar_list = np.array(new_Quasar_list)
-  with open(f"magnification_{phi_s}list.txt", "wb") as fp:   #Pickling
+  with open(f"magnification_{phi_s}list_{eps}.txt", "wb") as fp:   #Pickling
     pickle.dump(new_Quasar_list, fp)
   return new_Quasar_list
 
@@ -1039,13 +1039,13 @@ def magnification_plot(Quasar_list, color, iflabel=False):
       tck = interpolate.splrep(x, y[i], s=smooth(i))
       ynew[i] = interpolate.splev(x, tck, der=0)
       #plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
-      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i))
+      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i), s=1)
   else:
     for i in range(4):
       tck = interpolate.splrep(x, y[i], s=10)
       ynew[i] = interpolate.splev(x, tck, der=0)
       #plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
-      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i))    
+      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i), s=1)    
     #plt.scatter(x, y[i], label = i+1)
   #plt.ylim(-ymax,ymax)
   ax = plt.gca()
@@ -1061,18 +1061,18 @@ phi_1_s = 2
 phi_2_s = 30
 
 #magnification_Quasars_random()
-'''
+
 with open("magnification_list.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 
 print(np.shape(new_Quasar_list[0,0]))
 
-phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.01)
+phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.5)
 print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.1)
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 1)
 print(len(phi_2_mag_list))
-'''
+
 with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
 with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
