@@ -1039,13 +1039,13 @@ def magnification_plot(Quasar_list, color, iflabel=False):
       tck = interpolate.splrep(x, y[i], s=smooth(i))
       ynew[i] = interpolate.splev(x, tck, der=0)
       #plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
-      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i), s=1)
+      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i), s=4)
   else:
     for i in range(4):
       tck = interpolate.splrep(x, y[i], s=10)
       ynew[i] = interpolate.splev(x, tck, der=0)
       #plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
-      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i), s=1)    
+      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i), s=4)    
     #plt.scatter(x, y[i], label = i+1)
   #plt.ylim(-ymax,ymax)
   ax = plt.gca()
@@ -1057,7 +1057,7 @@ def magnification_plot(Quasar_list, color, iflabel=False):
 
 
 
-phi_1_s = 2
+phi_1_s = 0
 phi_2_s = 30
 
 #magnification_Quasars_random()
@@ -1067,10 +1067,10 @@ with open("magnification_list.txt", "rb") as fp:   # Unpickling
 
 print(np.shape(new_Quasar_list[0,0]))
 
-phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.5)
+phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.01)
 print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 1)
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.1)
 print(len(phi_2_mag_list))
 
 with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
