@@ -1056,7 +1056,7 @@ phi_1_s = 2
 phi_2_s = 30
 
 #magnification_Quasars_random()
-'''
+
 with open("magnification_list.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 
@@ -1065,9 +1065,9 @@ print(np.shape(new_Quasar_list[0,0]))
 phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.1)
 print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.5)
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.4)
 print(len(phi_2_mag_list))
-'''
+
 with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
 with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
