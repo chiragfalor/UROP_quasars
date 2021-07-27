@@ -7,7 +7,11 @@ import random
 import pickle
 from scipy import interpolate
 from scipy import ndimage
-from labellines import labelLines
+import time
+from datetime import timedelta
+start_time = time.monotonic()
+
+#from labellines import labelLines
 
 #plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 #plt.rc('text', usetex=True)
@@ -148,11 +152,11 @@ class Quasar(Conic):
 
     self.quasar_rotator(-self.psi)
 
-    self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+    #self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
 
     self.theta_23 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[1])
 
-    self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
+    #self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
 
     #self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
 
@@ -162,7 +166,7 @@ class Quasar(Conic):
 
     self.causticity = self.calculate_causticity()
 
-    self.new_causticity = self.calculate_new_causticity()
+    #self.new_causticity = self.calculate_new_causticity()
 
     self.astroidal_angle = self.calculate_astroidal_angle()
 
@@ -170,11 +174,12 @@ class Quasar(Conic):
     for i in range(4):
       self.mag_array[i] = 1/(np.cos(2*self.configuration_angles[i])+self.causticity*(-np.cos(self.configuration_angles[i])*(np.cos(self.astroidal_angle))**3 + np.sin(self.configuration_angles[i])*(np.sin(self.astroidal_angle))**3))
 
-    self.property_checker()
+    #self.property_checker()
 
-    t2 = self.configuration_angles[1]
-    t3 = self.configuration_angles[2]
-    self.fake_astroidal_angle = np.arctan((np.tan(t2)*np.tan(t3)*np.tan((t2+t3)/2)))
+    
+    #t2 = self.configuration_angles[1]
+    #t3 = self.configuration_angles[2]
+    #self.fake_astroidal_angle = np.arctan((np.tan(t2)*np.tan(t3)*np.tan((t2+t3)/2)))
 
 
   
@@ -869,7 +874,7 @@ def angle_difference_contour_plot(Quasar_list):
 
 def magnification_Quasars_random():
     global theta_23_err
-    N = 500000
+    N = 5*(10**6)
     random.seed(3)
     np.random.seed(3)
     Quasar_list = []
@@ -880,6 +885,8 @@ def magnification_Quasars_random():
     def rounding_error(a):
         return abs(a-round(a))
     for i in range(N):
+        if i%10000 == 0:
+          print(i/10000) 
         del_1 = random.uniform(0, 10*np.pi)
         del_2 = random.uniform(0, 10*np.pi)
         a1 = del_1
@@ -970,10 +977,6 @@ def magnification_plot(Quasar_list, color, iflabel=False):
   Quasar_mag_1_array = np.array(Quasar_list[:, 5], dtype=float)
   Quasar_mag_2_array = np.abs(np.array(Quasar_list[:, 6], dtype=float))
   Quasar_mag_3_array = np.abs(np.array(Quasar_list[:, 7], dtype=float))
-  Quasar_maglog_0_array = np.log(np.abs(Quasar_mag_0_array))
-  Quasar_maglog_1_array = np.log(np.abs(Quasar_mag_1_array))
-  Quasar_maglog_2_array = np.log(np.abs(Quasar_mag_2_array))
-  Quasar_maglog_3_array = np.log(np.abs(Quasar_mag_3_array))
   causticity_array = np.array(Quasar_list[:, 3], dtype=float)
   causticitylog_array = np.log(causticity_array)
   astroidal_angle_array = np.array(Quasar_list[:, 4])
@@ -1035,12 +1038,14 @@ def magnification_plot(Quasar_list, color, iflabel=False):
     for i in range(4):
       tck = interpolate.splrep(x, y[i], s=smooth(i))
       ynew[i] = interpolate.splev(x, tck, der=0)
-      plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
+      #plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
+      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i))
   else:
     for i in range(4):
       tck = interpolate.splrep(x, y[i], s=10)
       ynew[i] = interpolate.splev(x, tck, der=0)
-      plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
+      #plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
+      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i))    
     #plt.scatter(x, y[i], label = i+1)
   #plt.ylim(-ymax,ymax)
   ax = plt.gca()
@@ -1056,18 +1061,18 @@ phi_1_s = 2
 phi_2_s = 30
 
 #magnification_Quasars_random()
-
+'''
 with open("magnification_list.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 
 print(np.shape(new_Quasar_list[0,0]))
 
-phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.1)
+phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.01)
 print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.4)
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.1)
 print(len(phi_2_mag_list))
-
+'''
 with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
 with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
@@ -1204,3 +1209,7 @@ contour_plot_causticity_astroidal_angle(new_Quasar_list)
 print("Number of theta_23 errors is", theta_23_err)
 '''
 #Quasar_test()
+
+
+end_time = time.monotonic()
+print(timedelta(seconds=end_time - start_time))
