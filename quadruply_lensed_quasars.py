@@ -912,6 +912,46 @@ def magnification_Quasars_random():
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
+def magnification_Quasars_specificrandom():
+    global theta_23_err
+    with open("magnification_list.txt", "rb") as fp:   # Unpickling
+      Quasar_list = pickle.load(fp)
+    N = 5*(10**6)
+    random.seed(3)
+    np.random.seed(3)
+    theta_12_max = np.pi
+    theta_12_min = 0
+    theta_23_max = np.pi/2
+    theta_23_min = 0
+    def rounding_error(a):
+        return abs(a-round(a))
+    for i in range(N):
+        if i%10000 == 0:
+          print(i/10000) 
+        del_1 = random.gauss(0, np.pi/4)
+        del_2 = random.gauss(0, np.pi/4)
+        a1 = del_1
+        a2 = del_1 + del_2
+        c1 = (2,0)
+        c2 = (1+np.cos(a1), np.sin(a1))
+        c3 = (1+np.cos(a2), np.sin(a2))
+        try:
+            Q = Quasar(c1, c2, c3)
+            if Q.theta_23>theta_23_max or Q.theta_23< theta_23_min:
+              raise(KeyError)
+            Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
+            Quasar_list.append(Quasar_tuple)  
+        except np.linalg.LinAlgError:
+            print("linalg err")
+        except KeyError:
+            print("theta_23 or ratio out of bounds")
+            theta_23_err += 1
+        #except:
+         #   print("bad err")
+    Quasar_list = np.array(Quasar_list)
+    with open("magnification_list.txt", "wb") as fp:   #Pickling
+      pickle.dump(Quasar_list, fp)
+    return Quasar_list
 
 
 
@@ -1057,25 +1097,27 @@ def magnification_plot(Quasar_list, color, iflabel=False):
 
 
 
-phi_1_s = 0
+phi_1_s = 2
+phi_1_eps = 0.002
 phi_2_s = 30
+phi_2_eps = 0.01
 
 #magnification_Quasars_random()
-
+'''
 with open("magnification_list.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
 
 print(np.shape(new_Quasar_list[0,0]))
 
-phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, 0.01)
+phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, phi_1_eps)
 print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, 0.1)
+phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, phi_2_eps)
 print(len(phi_2_mag_list))
-
-with open(f"magnification_{phi_1_s}list.txt", "rb") as fp:   # Unpickling
+'''
+with open(f"magnification_{phi_1_s}list_{phi_1_eps}.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
-with open(f"magnification_{phi_2_s}list.txt", "rb") as fp:   # Unpickling
+with open(f"magnification_{phi_2_s}list_{phi_2_eps}.txt", "rb") as fp:   # Unpickling
   phi_2_mag_list = pickle.load(fp)
 magnification_plot(phi_1_mag_list, 'r', True)
 magnification_plot(phi_2_mag_list, 'g')
