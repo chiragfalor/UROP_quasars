@@ -914,29 +914,28 @@ def magnification_Quasars_random():
 
 def magnification_Quasars_specificrandom():
     global theta_23_err
-    with open("magnification_list.txt", "rb") as fp:   # Unpickling
-      Quasar_list = pickle.load(fp)
-    N = 5*(10**6)
+    N = 2*(10**6)
+    Quasar_list = []
     random.seed(3)
     np.random.seed(3)
     theta_12_max = np.pi
     theta_12_min = 0
     theta_23_max = np.pi/2
     theta_23_min = 0
-    def rounding_error(a):
-        return abs(a-round(a))
     for i in range(N):
-        if i%10000 == 0:
-          print(i/10000) 
-        del_1 = random.gauss(0, np.pi/4)
-        del_2 = random.gauss(0, np.pi/4)
+        del_1 = random.gauss(0, np.pi/50)
+        del_2 = random.uniform(0, 10*np.pi)
         a1 = del_1
-        a2 = del_1 + del_2
+        a2 = del_2
         c1 = (2,0)
         c2 = (1+np.cos(a1), np.sin(a1))
         c3 = (1+np.cos(a2), np.sin(a2))
         try:
             Q = Quasar(c1, c2, c3)
+            if i%10000 == 0:
+              print(i/10000) 
+              #Q.plot()
+              #plt.show()
             if Q.theta_23>theta_23_max or Q.theta_23< theta_23_min:
               raise(KeyError)
             Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
@@ -949,7 +948,7 @@ def magnification_Quasars_specificrandom():
         #except:
          #   print("bad err")
     Quasar_list = np.array(Quasar_list)
-    with open("magnification_list.txt", "wb") as fp:   #Pickling
+    with open("magnification_list_specific.txt", "wb") as fp:   #Pickling
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
@@ -1002,8 +1001,21 @@ def magnification_separator(Quasar_list, phi_s, eps):
   for i in range(len(Quasar_list)):
     if 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > phi_s-eps:# and ((Quasar_list[i,2])**2+(Quasar_list[i,5])**2+(Quasar_list[i,6])**2+(Quasar_list[i,7])**2)<max_mag:
       new_Quasar_list.append(Quasar_list[i])
+    elif 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < 90-phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > 90-phi_s-eps:
+      configuration_angles = Quasar_list[i][0]
+      coords = [(1+np.sin(configuration_angles[i]), np.cos(configuration_angles[i])) for i in range(4)]
+      c1, c2, c3, c4 = coords
+      try:
+          Q = Quasar(c1, c2, c3)
+          Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
+          new_Quasar_list.append(Quasar_tuple)  
+      except np.linalg.LinAlgError:
+          print("linalg err")
+      except KeyError:
+          print("theta_23 or ratio out of bounds")
+          theta_23_err += 1
   new_Quasar_list = np.array(new_Quasar_list)
-  with open(f"magnification_{phi_s}list_{eps}.txt", "wb") as fp:   #Pickling
+  with open(f"magnification_{phi_s}list_{eps}_specific.txt", "wb") as fp:   #Pickling
     pickle.dump(new_Quasar_list, fp)
   return new_Quasar_list
 
@@ -1103,10 +1115,13 @@ phi_2_s = 30
 phi_2_eps = 0.01
 
 #magnification_Quasars_random()
-'''
-with open("magnification_list.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
+#magnification_Quasars_specificrandom()
 
+with open("magnification_list_specific.txt", "rb") as fp:   # Unpickling
+  old2_Quasar_list = pickle.load(fp)
+with open("magnification_list.txt", "rb") as fp:   # Unpickling
+  old1_Quasar_list = pickle.load(fp)
+new_Quasar_list = np.append(old1_Quasar_list, old2_Quasar_list, axis = 0)
 print(np.shape(new_Quasar_list[0,0]))
 
 phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, phi_1_eps)
@@ -1114,10 +1129,10 @@ print(len(phi_1_mag_list))
 
 phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, phi_2_eps)
 print(len(phi_2_mag_list))
-'''
-with open(f"magnification_{phi_1_s}list_{phi_1_eps}.txt", "rb") as fp:   # Unpickling
+
+with open(f"magnification_{phi_1_s}list_{phi_1_eps}_specific.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
-with open(f"magnification_{phi_2_s}list_{phi_2_eps}.txt", "rb") as fp:   # Unpickling
+with open(f"magnification_{phi_2_s}list_{phi_2_eps}_specific.txt", "rb") as fp:   # Unpickling
   phi_2_mag_list = pickle.load(fp)
 magnification_plot(phi_1_mag_list, 'r', True)
 magnification_plot(phi_2_mag_list, 'g')
@@ -1162,7 +1177,7 @@ plt.annotate('$\phi_s = 5°$', # this is the text
             weight='bold')
 '''
 plt.annotate('$\phi_s = 30°$', # this is the text
-            (1.8,20), # this is the point to label
+            (1.8,18), # this is the point to label
             textcoords="offset points", # how to position the text
             xytext=(0,0), # distance from text to points (x,y)
             ha='center',
