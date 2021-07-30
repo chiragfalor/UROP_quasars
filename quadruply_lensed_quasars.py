@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import random
 import pickle
+from mpl_toolkits.axes_grid.inset_locator import inset_axes
+
 
 #plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 #plt.rc('text', usetex=True)
@@ -116,11 +118,10 @@ class RectangularHyperbola(Conic):
             plt.axvline(0, alpha=.1)
         axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
-        plt.plot(self.c1[0], self.c1[1], 'r+')
-        plt.plot(self.c2[0], self.c2[1], 'r+')
-        plt.plot(self.c3[0], self.c3[1], 'r+')
-        plt.plot(self.c4[0], self.c4[1], 'r+')
-        plt.show()
+        # plt.plot(self.c1[0], self.c1[1], 'r+')
+        # plt.plot(self.c2[0], self.c2[1], 'r+')
+        # plt.plot(self.c3[0], self.c3[1], 'r+')
+        # plt.plot(self.c4[0], self.c4[1], 'r+')
 
 
 class Quasar(Conic):
@@ -147,6 +148,8 @@ class Quasar(Conic):
     self.quasar_rotator(-self.psi)
 
     self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+
+    self.quasar_hyperbola_center = self.quasar_hyperbola.center
 
     self.theta_23 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[1])
 
@@ -263,6 +266,8 @@ class Quasar(Conic):
       new_configurational_angles[i] = angle_sum(self.configuration_angles[i], phi)
     self.configuration_angles = new_configurational_angles
     self.configuration_angles_to_coordinates(new_configurational_angles)
+    self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+    self.quasar_hyperbola_center = self.quasar_hyperbola.center
 
   def angle_difference(self, a1, a2):
       positive_difference = abs(a1 - a2)
@@ -372,6 +377,15 @@ class Quasar(Conic):
     if abs(a-b) > epsilon:
       self.__str__()
       raise Exception("property 2 lost")
+    '''
+    property 3
+    center of hyperbola = centroid of plotted configurations
+    '''
+    x_sum = np.sum(self.quasar_norm_array[:,0])
+    y_sum = np.sum(self.quasar_norm_array[:,1])
+    if abs((x_sum/4 - self.quasar_hyperbola_center[0])**2 + (y_sum/4 - self.quasar_hyperbola_center[1])**2)>epsilon:
+      self.__str__()
+      raise Exception("property 3 lost")
     
 
 
@@ -385,25 +399,6 @@ class Quasar(Conic):
     plt.gca().add_artist( cc )
     # zip joins x and y coordinates in pairs
     j=0
-    for x,y in zip(xs,ys):
-        j += 1
-        label = j
-        if j == 1:
-          offset = (-15, -5)
-        elif j == 3:
-          offset = (0,7)
-        elif j==2:
-          offset = (15,-6)
-        elif j==4:
-          offset = (0, -25)
-        else:
-          raise(Exception("Why you hurt me in this way :("))
-        plt.annotate(label, # this is the text
-                    (x,y), # this is the point to label
-                    textcoords="offset points", # how to position the text
-                    xytext=offset, # distance from text to points (x,y)
-                    ha='center',
-                    size = 20)
 
   def __str__(self):
     print("Configuration Angles", self.configuration_angles)
@@ -754,9 +749,9 @@ def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
   plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
-  y = np.linspace(-0.03,0.03, 100)
-  x = r*np.ones_like(y)
-  plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
+  # y = np.linspace(-0.03,0.03, 100)
+  # x = r*np.ones_like(y)
+  # plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
   '''
   x = np.linspace(0.1, r, 4000)
   y = (r**(2/3) - x**(2/3))**3/2  
@@ -1331,16 +1326,48 @@ def Quasar_random_shear_plot_try2():
 
 
 
-with open("new_plot_4ca_list.txt", "rb") as fp:   # Unpickling
+with open("causticity.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
+fig = plt.figure(figsize=(13, 13),facecolor='white')
+def locfn(r):
+  if r==0:
+    return 3
+  elif r==1:
+    return 4
+  elif r==2:
+    return 1
+  elif r==3:
+    return 2
 
+for j in range(9):
+  #for i in range(3):
+    ax = fig.add_subplot(3,3,j+1)
+    Q = new_Quasar_list[j][0]
+    r = np.random.randint(4)
+    Q.quasar_rotator(r*np.pi/2)
+    Q.quasar_hyperbola.plot()
+    Q.plot()
+    plt.scatter(Q.quasar_hyperbola_center[0],Q.quasar_hyperbola_center[1], c='k')
+    plot_astroid(1)
+    plt.xticks([])
+    plt.yticks([])
+    ax.set_xlim(-1.2, 1.2)
+    ax.set_ylim(-1.2, 1.2)
+    ax_ins = inset_axes(ax, width="30%", height="30%",loc=locfn(r))
+    plot_astroid(1)
+    plt.scatter(-Q.causticity*(np.cos(Q.astroidal_angle+r*np.pi/2))**3, Q.causticity*(np.sin(Q.astroidal_angle+r*np.pi/2))**3, color = 'k')
+    plt.xticks([])
+    plt.yticks([])
+plt.savefig("hyp_center_fig.pdf")
+plt.show()
+'''
 with open("new_plot_4ca_dict.txt", "rb") as fp:   # Unpickling
   new_plotting_dictionary = pickle.load(fp)
 
 
 print(new_plotting_dictionary[(0.95, np.pi/2)][1])
 Plot_quasars_4sided(new_Quasar_list, new_plotting_dictionary)
-
+'''
 '''
 with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
