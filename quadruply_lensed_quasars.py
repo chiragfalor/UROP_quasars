@@ -116,8 +116,8 @@ class RectangularHyperbola(Conic):
         def axes():
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
-        axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
+        #axes()
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths = 5)
         # plt.plot(self.c1[0], self.c1[1], 'r+')
         # plt.plot(self.c2[0], self.c2[1], 'r+')
         # plt.plot(self.c3[0], self.c3[1], 'r+')
@@ -383,7 +383,7 @@ class Quasar(Conic):
     '''
     x_sum = np.sum(self.quasar_norm_array[:,0])
     y_sum = np.sum(self.quasar_norm_array[:,1])
-    if abs((x_sum/4 - self.quasar_hyperbola_center[0])**2 + (y_sum/4 - self.quasar_hyperbola_center[1])**2)>epsilon:
+    if abs((x_sum/2 - self.quasar_hyperbola_center[0])**2 + (y_sum/2 - self.quasar_hyperbola_center[1])**2)>epsilon:
       self.__str__()
       raise Exception("property 3 lost")
     
@@ -1328,37 +1328,10 @@ def Quasar_random_shear_plot_try2():
 
 with open("causticity.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
-fig = plt.figure(figsize=(13, 13),facecolor='white')
-def locfn(r):
-  if r==0:
-    return 3
-  elif r==1:
-    return 4
-  elif r==2:
-    return 1
-  elif r==3:
-    return 2
-
-for j in range(9):
-  #for i in range(3):
-    ax = fig.add_subplot(3,3,j+1)
-    Q = new_Quasar_list[j][0]
-    r = np.random.randint(4)
-    Q.quasar_rotator(r*np.pi/2)
-    Q.quasar_hyperbola.plot()
-    Q.plot()
-    plt.scatter(Q.quasar_hyperbola_center[0],Q.quasar_hyperbola_center[1], c='k')
-    plot_astroid(1)
-    plt.xticks([])
-    plt.yticks([])
-    ax.set_xlim(-1.2, 1.2)
-    ax.set_ylim(-1.2, 1.2)
-    ax_ins = inset_axes(ax, width="30%", height="30%",loc=locfn(r))
-    plot_astroid(1)
-    plt.scatter(-Q.causticity*(np.cos(Q.astroidal_angle+r*np.pi/2))**3, Q.causticity*(np.sin(Q.astroidal_angle+r*np.pi/2))**3, color = 'k')
-    plt.xticks([])
-    plt.yticks([])
-plt.savefig("hyp_center_fig.pdf")
+Q = new_Quasar_list[0][0]
+plt.axis('off')
+Q.quasar_hyperbola.plot()
+plt.savefig('hyperbola.pdf')
 plt.show()
 '''
 with open("new_plot_4ca_dict.txt", "rb") as fp:   # Unpickling
