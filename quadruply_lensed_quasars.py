@@ -194,12 +194,12 @@ class RectangularHyperbola(Conic):
             plt.axvline(0, alpha=.1)
         #axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths = 7)
-        msize = 20
+        msize = 300
         if points:
             plt.scatter(self.c1[0], self.c1[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
-            plt.scatter(self.c2[0], self.c2[1], c='#d62728', marker = 'o', zorder = 10)
-            plt.scatter(self.c3[0], self.c3[1], c='#d62728', marker = 'o', zorder = 10)
-            plt.scatter(self.c4[0], self.c4[1], c='#d62728', marker = 'o', zorder = 10)
+            plt.scatter(self.c2[0], self.c2[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c3[0], self.c3[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c4[0], self.c4[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
 
 
 class Quasar(Conic):
@@ -515,7 +515,8 @@ plt.gca().set_aspect('equal')
 # #Q.quasar_hyperbola.plot()
 # plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
 # plt.show()
-
+fig_size= [8,8]
+plt.rcParams["figure.figsize"] = fig_size
 ell.plot()
 hyp.plot(True)
 plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
