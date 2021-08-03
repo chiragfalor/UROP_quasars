@@ -25,6 +25,8 @@ class Conic():
     returns cartesian distance between 2 coordinates
     '''
     return np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
+  def coordinate_difference(self, c1, c2):
+    return [c1[0]-c2[0], c1[1]-c2[1]]
 
 
 
@@ -131,20 +133,20 @@ class AlignedEllipse(Conic):
         return (x**2, y**2, x, y)
 
     def plot(self):
-        x = np.linspace(-3, 3, 400)
-        y = np.linspace(-3, 3, 400)
+        x = np.linspace(-2, 2, 400)
+        y = np.linspace(-2, 2, 400)
         x, y = np.meshgrid(x, y)
-        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
+        a, b, c, d, e, f = self.coefficients[0], 0, self.coefficients[1], self.coefficients[2], self.coefficients[3], -1
         def axes():
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
         axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
-        plt.plot(self.c1[0], self.c1[1], 'r+')
-        plt.plot(self.c2[0], self.c2[1], 'r+')
-        plt.plot(self.c3[0], self.c3[1], 'r+')
-        plt.plot(self.c4[0], self.c4[1], 'r+')
-        plt.show()
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=7)
+        # plt.plot(self.c1[0], self.c1[1], 'r+')
+        # plt.plot(self.c2[0], self.c2[1], 'r+')
+        # plt.plot(self.c3[0], self.c3[1], 'r+')
+        # plt.plot(self.c4[0], self.c4[1], 'r+')
+        #plt.show()
 
 class RectangularHyperbola(Conic):
     def __init__(self, c1, c2, c3, c4):
@@ -182,20 +184,22 @@ class RectangularHyperbola(Conic):
         y = c1[1]
         return (x**2-y**2, x*y, x, y)
 
-    def plot(self):
-        x = np.linspace(-3, 3, 400)
-        y = np.linspace(-3, 3, 400)
+    def plot(self, points=False):
+        x = np.linspace(-2, 2, 400)
+        y = np.linspace(-2, 2, 400)
         x, y = np.meshgrid(x, y)
         a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
         def axes():
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
         #axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths = 5)
-        # plt.plot(self.c1[0], self.c1[1], 'r+')
-        # plt.plot(self.c2[0], self.c2[1], 'r+')
-        # plt.plot(self.c3[0], self.c3[1], 'r+')
-        # plt.plot(self.c4[0], self.c4[1], 'r+')
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths = 7)
+        msize = 20
+        if points:
+            plt.scatter(self.c1[0], self.c1[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c2[0], self.c2[1], c='#d62728', marker = 'o', zorder = 10)
+            plt.scatter(self.c3[0], self.c3[1], c='#d62728', marker = 'o', zorder = 10)
+            plt.scatter(self.c4[0], self.c4[1], c='#d62728', marker = 'o', zorder = 10)
 
 
 class Quasar(Conic):
@@ -486,6 +490,36 @@ class Quasar(Conic):
     return str(self.configuration_angles)
     
 
+
+
+with open("causticity.txt", "rb") as fp:   # Unpickling
+  new_Quasar_list = pickle.load(fp)
+Q = new_Quasar_list[0][0]
+angles = Q.configuration_angles
+a = 1.5
+b= 1
+c1 = (a*np.cos(angles[0]), b*np.sin(angles[0]))
+c2 = (a*np.cos(angles[1]), b*np.sin(angles[1]))
+c3 = (a*np.cos(angles[2]), b*np.sin(angles[2]))
+c4 = (a*np.cos(angles[3]), b*np.sin(angles[3])) 
+ell = AlignedEllipse(c1, c2, c3, c4)
+hyp = RectangularHyperbola(c1, c2, c3, c4)
+plt.axis('off')
+plt.gca().set_aspect('equal')
+# hyp.plot()
+# plt.savefig('hyperbola.pdf', bbox_inches = 'tight',pad_inches = 0)
+# plt.show()
+# ell.plot()
+# plt.axis('off')
+# plt.gca().set_aspect('equal')
+# #Q.quasar_hyperbola.plot()
+# plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+# plt.show()
+
+ell.plot()
+hyp.plot(True)
+plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+plt.show()
 
 
 
@@ -1400,13 +1434,6 @@ def Quasar_random_shear_plot_try2():
 
 
 
-with open("causticity.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-Q = new_Quasar_list[0][0]
-plt.axis('off')
-Q.quasar_hyperbola.plot()
-plt.savefig('hyperbola.pdf')
-plt.show()
 '''
 with open("new_plot_4ca_dict.txt", "rb") as fp:   # Unpickling
   new_plotting_dictionary = pickle.load(fp)
