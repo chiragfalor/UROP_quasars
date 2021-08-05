@@ -142,6 +142,7 @@ class AlignedEllipse(Conic):
             plt.axvline(0, alpha=.1)
         axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=7)
+        plt.scatter(0, 0, c='c', marker = 'o', zorder = 10, s=100)
         # plt.plot(self.c1[0], self.c1[1], 'r+')
         # plt.plot(self.c2[0], self.c2[1], 'r+')
         # plt.plot(self.c3[0], self.c3[1], 'r+')
@@ -509,18 +510,20 @@ plt.gca().set_aspect('equal')
 # hyp.plot()
 # plt.savefig('hyperbola.pdf', bbox_inches = 'tight',pad_inches = 0)
 # plt.show()
+ell.plot()
+plt.axis('off')
+plt.gca().set_aspect('equal')
+#Q.quasar_hyperbola.plot()
+plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+plt.show()
+# fig_size= [8,8]
+# plt.rcParams["figure.figsize"] = fig_size
 # ell.plot()
+# hyp.plot(True)
 # plt.axis('off')
 # plt.gca().set_aspect('equal')
-# #Q.quasar_hyperbola.plot()
-# plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+# plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
 # plt.show()
-fig_size= [8,8]
-plt.rcParams["figure.figsize"] = fig_size
-ell.plot()
-hyp.plot(True)
-plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
-plt.show()
 
 
 
