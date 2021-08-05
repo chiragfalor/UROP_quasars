@@ -142,7 +142,7 @@ class AlignedEllipse(Conic):
             plt.axvline(0, alpha=.1)
         axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=7)
-        plt.scatter(0, 0, c='c', marker = 'o', zorder = 10, s=100)
+        #plt.scatter(0, 0, c='c', marker = 'o', zorder = 10, s=100)
         # plt.plot(self.c1[0], self.c1[1], 'r+')
         # plt.plot(self.c2[0], self.c2[1], 'r+')
         # plt.plot(self.c3[0], self.c3[1], 'r+')
@@ -479,6 +479,21 @@ class Quasar(Conic):
     # zip joins x and y coordinates in pairs
     j=0
 
+  def plot2(self, marker_shape):
+      radius_ratio = 1
+      xs,ys = self.quasar_norm_array[:,0]*radius_ratio, self.quasar_norm_array[:,1]*radius_ratio
+      e = AlignedEllipse((xs[0], ys[0]),(xs[1], ys[1]),(xs[2], ys[2]),(xs[3], ys[3]))
+      e.plot()
+      # plot the points
+      if marker_shape=='o':
+        plt.scatter(xs,ys,c='r', marker = marker_shape, zorder = 3, s=400)
+      else:
+        plt.scatter(xs,ys,c='#d62728', marker = marker_shape, zorder = 2, s=160)
+      plt.gca().set_aspect('equal')
+      # zip joins x and y coordinates in pairs
+      j=0
+      #plt.show()
+
   def __str__(self):
     print("Configuration Angles", self.configuration_angles)
     print("Causticity", self.causticity)
@@ -492,41 +507,72 @@ class Quasar(Conic):
     
 
 
+def WynneSchechterConstructionPlot():
+  with open("causticity.txt", "rb") as fp:   # Unpickling
+    new_Quasar_list = pickle.load(fp)
+  Q = new_Quasar_list[0][0]
+  angles = Q.configuration_angles
+  a = 1.5
+  b= 1
+  c1 = (a*np.cos(angles[0]), b*np.sin(angles[0]))
+  c2 = (a*np.cos(angles[1]), b*np.sin(angles[1]))
+  c3 = (a*np.cos(angles[2]), b*np.sin(angles[2]))
+  c4 = (a*np.cos(angles[3]), b*np.sin(angles[3])) 
+  ell = AlignedEllipse(c1, c2, c3, c4)
+  hyp = RectangularHyperbola(c1, c2, c3, c4)
+  plt.axis('off')
+  plt.gca().set_aspect('equal')
+  # hyp.plot()
+  # plt.savefig('hyperbola.pdf', bbox_inches = 'tight',pad_inches = 0)
+  # plt.show()
+  ell.plot()
+  plt.axis('off')
+  plt.gca().set_aspect('equal')
+  #Q.quasar_hyperbola.plot()
+  plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+  plt.show()
+  # fig_size= [8,8]
+  # plt.rcParams["figure.figsize"] = fig_size
+  # ell.plot()
+  # hyp.plot(True)
+  # plt.axis('off')
+  # plt.gca().set_aspect('equal')
+  # plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+  # plt.show()
 
-with open("causticity.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-Q = new_Quasar_list[0][0]
-angles = Q.configuration_angles
-a = 1.5
-b= 1
-c1 = (a*np.cos(angles[0]), b*np.sin(angles[0]))
-c2 = (a*np.cos(angles[1]), b*np.sin(angles[1]))
-c3 = (a*np.cos(angles[2]), b*np.sin(angles[2]))
-c4 = (a*np.cos(angles[3]), b*np.sin(angles[3])) 
-ell = AlignedEllipse(c1, c2, c3, c4)
-hyp = RectangularHyperbola(c1, c2, c3, c4)
-plt.axis('off')
-plt.gca().set_aspect('equal')
-# hyp.plot()
-# plt.savefig('hyperbola.pdf', bbox_inches = 'tight',pad_inches = 0)
-# plt.show()
-ell.plot()
-plt.axis('off')
-plt.gca().set_aspect('equal')
-#Q.quasar_hyperbola.plot()
-plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
-plt.show()
-# fig_size= [8,8]
-# plt.rcParams["figure.figsize"] = fig_size
-# ell.plot()
-# hyp.plot(True)
-# plt.axis('off')
-# plt.gca().set_aspect('equal')
-# plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
-# plt.show()
 
+def WynneSchechter_ACP_construction():
+  with open("quasar_ca_2.txt", "rb") as fp:   # Unpickling
+    result = pickle.load(fp)
+  #plot_causticity_astroidal_angle(new_Quasar_list)
+  
+  fig_size= [8,8]
+  plt.rcParams["figure.figsize"] = fig_size
+  print(result)
+  ax = plt.gca()
+  ax.set_xlim(-1.2, 1.2)
+  ax.set_ylim(-1.5, 1.5)
+  plt.scatter(0,0, s=800, marker='*', c= 'orange', zorder=20)
+  plt.axis('off')
 
+  result[0][0].plot2('o')
+  result[0][0].quasar_hyperbola.plot()
+  plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
 
+  # result[1][0].plot2('o')
+  # result[1][0].quasar_hyperbola.plot()
+  # plt.savefig('wynne_schechter_construction_square.pdf', bbox_inches = 'tight',pad_inches = 0)
+
+  # result[2][0].plot2('o')
+  # result[2][0].quasar_hyperbola.plot()
+  # plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
+
+  # result[3][0].plot2('o')
+  # result[3][0].quasar_hyperbola.plot()
+
+  plt.show()
+
+WynneSchechter_ACP_construction()
 
 def Quasar_test():
     Quasar_list = []
