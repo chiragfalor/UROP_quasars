@@ -627,7 +627,7 @@ def AlignedEllipse_test():
   plt.show()
 #AlignedEllipse_test()
 
-def central_flash_deviations():
+def print_central_flash_deviations():
   NCQlist = []
   S1P1 = (-14.1373417999757,3.5466025729274)
   S1P2 = (-12.358667515963,1.5871018829614)
@@ -722,6 +722,106 @@ def central_flash_deviations():
     #print("d(Theta_23) of snapshot "+str(i+2)+" is "+str(NCQ.diff_theta_23*180/np.pi))
     print(" "+str(i+2)+" & $"+"{:.3f}".format(NCQ.diff_theta_23*180/np.pi)+"^\\circ$  \\\\")
     print("\\hline")
+#print_central_flash_deviations()
+
+def central_flash_deviations():
+  NCQlist = []
+  S1P1 = (-14.1373417999757,3.5466025729274)
+  S1P2 = (-12.358667515963,1.5871018829614)
+
+  S2P1 = (-3.467548592968,4.2937233604296)
+  S2P2 = (-3.0360531925048,3.992103466708)
+  S2P3 = (-4.0176241335422,1.6496079065768)
+  S2P4 = (-5.6870476943574,3.5865672944457)
+  S2el = AlignedEllipse(S2P1, S2P2, S2P3, S2P4)
+  S2NCQ = NonCircularQuasar(S2el.normalized_coordinates)
+  NCQlist.append(S2NCQ)
+
+  S3P1 = (4.6350644506851,4.4069767685748)
+  S3P2 = (5.4704940775284,3.8834886762181)
+  S3P3 = (4.3267084510777,1.6783847255372)
+  S3P4 = (2.6917045461826,3.6862842578645)
+  S3el = AlignedEllipse(S3P1, S3P2, S3P3, S3P4)
+  S3NCQ = NonCircularQuasar(S3el.normalized_coordinates)
+  NCQlist.append(S3NCQ)
+
+
+  S4P1 = (12.8598857852702,4.5087039395151)
+  S4P2 = (13.9672698871411,3.8808057374234)
+  S4P3 = (12.6772244901162,1.6964810828739)
+  S4P4 = (11.0979653757643,3.7095607732165)
+  S4el = AlignedEllipse(S4P1, S4P2, S4P3, S4P4)
+  S4NCQ = NonCircularQuasar(S4el.normalized_coordinates)
+  NCQlist.append(S4NCQ)
+
+  S5P1 = (-12.4647508858568,-3.1512834278988)
+  S5P2 = (-11.1285512072286,-3.8669569399814)
+  S5P3 = (-12.5102561380701,-5.9726090651262)
+  S5P4 = (-14.0367505077724,-3.9331463977463)
+  S5el = AlignedEllipse(S5P1, S5P2, S5P3, S5P4)
+  S5NCQ = NonCircularQuasar(S5el.normalized_coordinates)
+  NCQlist.append(S5NCQ)
+  
+  S6P1 = (-4.2075604872552,-3.0972581702703)
+  S6P2 = (-2.6826384023429,-3.8967318846903)
+  S6P3 = (-4.1705478152913,-5.9176237739188)
+  S6P4 = (-5.6177432890795,-3.8708230143156)
+  S6el = AlignedEllipse(S6P1, S6P2, S6P3, S6P4)
+  S6NCQ = NonCircularQuasar(S6el.normalized_coordinates)
+  NCQlist.append(S6NCQ)
+  
+  S7P1 = (3.9946582328477,-3.0710086026352)
+  S7P2 = (5.7072048517478,-3.887526365575)
+  S7P3 = (4.1720291326624,-5.8967105238204)
+  S7P4 = (2.8,-3.8)
+  S7el = AlignedEllipse(S7P1, S7P2, S7P3, S7P4)
+  S7NCQ = NonCircularQuasar(S7el.normalized_coordinates)
+  NCQlist.append(S7NCQ)
+  
+  S8P1 = (12.2658019474332,-3.0372940406156)
+  S8P2 = (14.1597269205058,-3.8571594826451)
+  S8P3 = (12.5164158380099,-5.8298488213274)
+  S8P4 = (11.2203840038847,-3.7139515451727)
+  S8el = AlignedEllipse(S8P1, S8P2, S8P3, S8P4)
+  S8NCQ = NonCircularQuasar(S8el.normalized_coordinates)
+  NCQlist.append(S8NCQ)
+  
+  S9P1 = (-12.9501307596877,1.1973625586572)
+  S9P2 = (-10.9073727702795,0.3602323237821)
+  S9P3 = (-12.6,-1.6)
+  S9P4 = (-13.8353258884312,0.57652434619)
+  S9el = AlignedEllipse(S9P1, S9P2, S9P3, S9P4)
+  S9NCQ = NonCircularQuasar(S9el.normalized_coordinates)
+  NCQlist.append(S9NCQ)
+  
+  S10P1 = (-4.7412897890279,1.1668004500816)
+  S10P2 = (-2.4730267054778,0.3626670492244)
+  S10P3 = (-4.2102582978957,-1.5376670726126)
+  S10P4 = (-5.3747344963069,0.6623205335061)
+  S10el = AlignedEllipse(S10P1, S10P2, S10P3, S10P4)
+  S10NCQ = NonCircularQuasar(S10el.normalized_coordinates)
+  NCQlist.append(S10NCQ)
+  
+  S11P1 = (3.4889607025369,1.1305825110341)
+  S11P2 = (5.9287228979863,0.3744705131972)
+  S11P3 = (4.1042583202098,-1.4561164289343)
+  S11P4 = (3.0940682016423,0.8122195645765)
+  S11el = AlignedEllipse(S11P1, S11P2, S11P3, S11P4)
+  S11NCQ = NonCircularQuasar(S11el.normalized_coordinates)
+  NCQlist.append(S11NCQ)
+  
+  S12P1 = (12.4499638103098,-1.4208235547604)
+  S12P2 = (14.3336638415673,0.4203870021078)
+  deviations_list = []
+  for i in range(len(NCQlist)):
+    NCQ = NCQlist[i]
+    deviations_list.append(NCQ.diff_theta_23*180/np.pi)
+    #print(" "+str(i+2)+"{:.3f}".format(NCQ.diff_theta_23*180/np.pi))
+  deviations_list = np.array(deviations_list)
+  print(deviations_list)
+  print("Mean deviation is ", np.mean(deviations_list))
+  print("Standard deviations of deviation is ", np.std(deviations_list, dtype=np.float64))
+   
 central_flash_deviations()
 
 def Saturn_Flash_test():
