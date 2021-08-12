@@ -1114,21 +1114,23 @@ phi_1_eps = 0.002
 phi_2_s = 30
 phi_2_eps = 0.01
 
+  
+'''
 #magnification_Quasars_random()
 #magnification_Quasars_specificrandom()
 
-with open("magnification_list_specific.txt", "rb") as fp:   # Unpickling
-  old2_Quasar_list = pickle.load(fp)
-with open("magnification_list.txt", "rb") as fp:   # Unpickling
-  old1_Quasar_list = pickle.load(fp)
-new_Quasar_list = np.append(old1_Quasar_list, old2_Quasar_list, axis = 0)
-print(np.shape(new_Quasar_list[0,0]))
+# with open("magnification_list_specific.txt", "rb") as fp:   # Unpickling
+#   old2_Quasar_list = pickle.load(fp)
+# with open("magnification_list.txt", "rb") as fp:   # Unpickling
+#   old1_Quasar_list = pickle.load(fp)
+# new_Quasar_list = np.append(old1_Quasar_list, old2_Quasar_list, axis = 0)
+# print(np.shape(new_Quasar_list[0,0]))
 
-phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, phi_1_eps)
-print(len(phi_1_mag_list))
+# phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, phi_1_eps)
+# print(len(phi_1_mag_list))
 
-phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, phi_2_eps)
-print(len(phi_2_mag_list))
+# phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, phi_2_eps)
+# print(len(phi_2_mag_list))
 
 with open(f"magnification_{phi_1_s}list_{phi_1_eps}_specific.txt", "rb") as fp:   # Unpickling
   phi_1_mag_list = pickle.load(fp)
@@ -1139,6 +1141,7 @@ magnification_plot(phi_2_mag_list, 'g')
 #labelLines(plt.gca().get_lines(), zorder=2.5, align=False, color='k', xvals = (10,90))
 plt.legend(loc=2)
 #my_legend()
+'''
 '''
 plt.annotate('$\phi_s = 40°$', # this is the text
             (1.8,18), # this is the point to label
@@ -1175,6 +1178,7 @@ plt.annotate('$\phi_s = 5°$', # this is the text
             ha='center',
             size = 22,
             weight='bold')
+'''
 '''
 plt.annotate('$\phi_s = 30°$', # this is the text
             (1.8,18), # this is the point to label
@@ -1219,6 +1223,7 @@ ax.yaxis.set_label_coords(-0.2, 0.25)
 
 plt.savefig("mag_plot_modified_with_1and4_more_smoothening_2_30.pdf")
 plt.show()
+'''
 #Quasar_list = all_Quasars_random()
 
 #Quasar_list = Quasar_random_grid_plot_test()
