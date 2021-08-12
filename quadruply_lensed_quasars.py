@@ -1,17 +1,12 @@
-from matplotlib.contour import QuadContourSet
+from matplotlib.markers import MarkerStyle
+from copy import deepcopy
 import numpy as np
 from itertools import cycle
 import matplotlib.pyplot as plt
 import matplotlib
 import random
 import pickle
-from scipy import interpolate
-from scipy import ndimage
-import time
-from datetime import timedelta
-start_time = time.monotonic()
 
-#from labellines import labelLines
 
 #plt.rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 #plt.rc('text', usetex=True)
@@ -29,6 +24,8 @@ class Conic():
     returns cartesian distance between 2 coordinates
     '''
     return np.sqrt((c1[0] - c2[0])**2 + (c1[1] - c2[1])**2)
+  def coordinate_difference(self, c1, c2):
+    return [c1[0]-c2[0], c1[1]-c2[1]]
 
 
 
@@ -72,9 +69,83 @@ class Circle(Conic):
         plt.plot(self.c1[0], self.c1[1], 'r+')
         plt.plot(self.c2[0], self.c2[1], 'r+')
         plt.plot(self.c3[0], self.c3[1], 'r+')
-        plt.show()
 
+class AlignedEllipse(Conic):
+    def __init__(self, c1, c2, c3, c4, iscentered=False):
+        '''
+        initialize a rectangular hyperbola in cartesian coordinates where c1, c2, c3, c4 are tuples of coordinates in the form of (x_i, y_i)
+        '''
+        self.c1 = c1
+        self.c2 = c2
+        self.c3 = c3
+        self.c4 = c4
+        equation_matrix = np.array([self.equation_maker_ellipse(c1), self.equation_maker_ellipse(c2), self.equation_maker_ellipse(c3), self.equation_maker_ellipse(c4)])
+        equation_solutions = np.array([1,1,1,1])
+        '''
+        Assumes that equation of ellipse is of the form Ax^2 + By^2 + Cx + Dy = 1 and solves the 4 equations got by substituting the 4 coordinates
+        '''
+        self.coefficients = np.linalg.solve(equation_matrix, equation_solutions)
+        self.center = self.findCenter_ellipse()
+        self.equation = str(self.coefficients[0]) + "x^2 + " + str(self.coefficients[1]) + "y^2 + " + str(self.coefficients[2]) + "x + " + str(self.coefficients[3]) + "y = 1"
+        self.centered_ellipse_coordinates = [self.coordinate_difference(c1, self.center),self.coordinate_difference(c2, self.center),self.coordinate_difference(c3, self.center),self.coordinate_difference(c4, self.center)]
+        if iscentered:
+          if (self.center[0])**2 + (self.center[1])**2>0.000001:
+            raise(Exception("Ellipse is not centered"))
+          if self.coefficients[0]<0 or self.coefficients[1]<0:
+            raise(Exception("This is not ellipse but hyperbola or imaginary figure"))
+          self.a = 1/np.sqrt(self.coefficients[0])
+          self.b = 1/np.sqrt(self.coefficients[1])
+          self.parametric_angles = [self.coordinate_to_parametric_angle(c1), self.coordinate_to_parametric_angle(c2), self.coordinate_to_parametric_angle(c3), self.coordinate_to_parametric_angle(c4)]
+        else:
+          centered_ellipse = AlignedEllipse(self.centered_ellipse_coordinates[0], self.centered_ellipse_coordinates[1],self.centered_ellipse_coordinates[2],self.centered_ellipse_coordinates[3], True)
+          self.a = centered_ellipse.a
+          self.b = centered_ellipse.b
+          self.parametric_angles = centered_ellipse.parametric_angles
+        self.normalized_coordinates = list(map(self.coordinate_normalizer, self.centered_ellipse_coordinates))
+          
+    def coordinate_normalizer(self,c1):
+      nc = (c1[0]/self.a, c1[1]/self.b)
+      return nc
 
+    def coordinate_to_parametric_angle(self, c1):
+      nc = (c1[0]/self.a, c1[1]/self.b)
+      return np.arctan2(nc[1], nc[0])
+      
+
+    def findCenter_ellipse(self):
+        '''
+        returns the center of the current hyperbola by partial differentiation of the equation wrt x and y separately and solving the linear equation
+        '''
+        A, B, C, D = self.coefficients
+        x_c = -C/(2*A)
+        y_c = -D/(2*B)
+        return (x_c, y_c)
+
+    def equation_maker_ellipse(self, c1):
+        '''
+        input: tuple (Coordinate)
+        output: from tuple(x,y), it returns (x**2-y**2, x*y, x, y)
+        '''
+        x = c1[0]
+        y = c1[1]
+        return (x**2, y**2, x, y)
+
+    def plot(self):
+        x = np.linspace(-2, 2, 400)
+        y = np.linspace(-2, 2, 400)
+        x, y = np.meshgrid(x, y)
+        a, b, c, d, e, f = self.coefficients[0], 0, self.coefficients[1], self.coefficients[2], self.coefficients[3], -1
+        def axes():
+            plt.axhline(0, alpha=.1)
+            plt.axvline(0, alpha=.1)
+        axes()
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=7)
+        #plt.scatter(0, 0, c='c', marker = 'o', zorder = 10, s=100)
+        # plt.plot(self.c1[0], self.c1[1], 'r+')
+        # plt.plot(self.c2[0], self.c2[1], 'r+')
+        # plt.plot(self.c3[0], self.c3[1], 'r+')
+        # plt.plot(self.c4[0], self.c4[1], 'r+')
+        #plt.show()
 
 class RectangularHyperbola(Conic):
     def __init__(self, c1, c2, c3, c4):
@@ -86,13 +157,14 @@ class RectangularHyperbola(Conic):
         self.c3 = c3
         self.c4 = c4
         equation_matrix = np.array([self.equation_maker_hyperbola(c1), self.equation_maker_hyperbola(c2), self.equation_maker_hyperbola(c3), self.equation_maker_hyperbola(c4)])
-        equation_solutions = np.array([1,1,1,1])
+        equation_solutions = np.array([-c1[1],-c2[1],-c3[1],-c4[1]])
+        print(equation_matrix)
         '''
         Assumes that equation of rectangular hyperbola is of the form A(x^2 - y^2) + Bxy + Cx + Dy = 1 and solves the 4 equations got by substituting the 4 coordinates
         '''
         self.coefficients = np.linalg.solve(equation_matrix, equation_solutions)
         self.center = self.findCenter()
-        self.equation = str(self.coefficients[0]) + "(x^2 - y^2) + " + str(self.coefficients[1]) + "xy + " + str(self.coefficients[2]) + "x + " + str(self.coefficients[3]) + "y = 1"
+        self.equation = str(self.coefficients[0]) + "(x^2 - y^2) + " + str(self.coefficients[1]) + "xy + " + str(self.coefficients[2]) + "x + " + str(self.coefficients[3]) + "y = 0"
 
     def findCenter(self):
         '''
@@ -110,23 +182,88 @@ class RectangularHyperbola(Conic):
         '''
         x = c1[0]
         y = c1[1]
-        return (x**2-y**2, x*y, x, y)
+        return (x**2-y**2, x*y, x, 1)
 
-    def plot(self):
-        x = np.linspace(-3, 3, 400)
-        y = np.linspace(-3, 3, 400)
+    def plot(self, points=False):
+        x = np.linspace(-2, 2, 400)
+        y = np.linspace(-2, 2, 400)
         x, y = np.meshgrid(x, y)
-        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
+        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], 1, self.coefficients[3]
         def axes():
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
-        axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
-        plt.plot(self.c1[0], self.c1[1], 'r+')
-        plt.plot(self.c2[0], self.c2[1], 'r+')
-        plt.plot(self.c3[0], self.c3[1], 'r+')
-        plt.plot(self.c4[0], self.c4[1], 'r+')
-        plt.show()
+        #axes()
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths = 7)
+        msize = 300
+        if points:
+            plt.scatter(self.c1[0], self.c1[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c2[0], self.c2[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c3[0], self.c3[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+            plt.scatter(self.c4[0], self.c4[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+
+    
+    def plot_branch_1(self, color, linestyles='solid', zorder = -3):
+        x = np.linspace(0, 1.5, 1000)
+        y = np.linspace(0, 1.5, 1000)
+        x, y = np.meshgrid(x, y)
+        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], 1, self.coefficients[3]
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -3, linestyles = linestyles)
+
+    def plot_branch_2(self, color, linestyles ='solid', zorder = -2, ymax = 0.9, xmax =0.01):
+        x = np.linspace(-1.5, xmax, 1000)
+        y = np.linspace(-1.5, ymax, 1000)
+        x, y = np.meshgrid(x, y)
+        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], 1, self.coefficients[3]
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, zorder = -2, linestyles = linestyles)
+
+def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
+  theta = np.linspace(0, 2*np.pi, 2000)
+
+  radius = r
+
+  a = (1+gamma)*radius*(np.cos(theta))**3
+  b = (1-gamma)*radius*(np.sin(theta))**3
+  plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
+  # y = np.linspace(-0.03,0.03, 100)
+  # x = r*np.ones_like(y)
+  # plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
+  '''
+  x = np.linspace(0.1, r, 4000)
+  y = (r**(2/3) - x**(2/3))**3/2  
+  plt.plot(x,y)
+  plt.plot(y,x)
+  '''
+
+
+def hyperbola_astroid_plot():
+  ax = plt.gca()
+  ax.set_xlim(-1.2, 1.2)
+  ax.set_ylim(-1.5, 1.5)
+  ax.set_aspect('equal')
+  plt.scatter(0,0, s=100, marker='o', c= 'orange', zorder=20)
+  plt.axis('off')
+  plot_astroid(1)
+  eps = 10**(-5)
+  C = Circle((0,1), (1,0), (-1,0))
+  C.plot()
+  def plot_h_astr_angle(angle, color, linestyles='solid', zorder = -3):
+    '''
+    given an astroidal angle for center of the hyperbola, plots the hyperbola corresponding to unit radius
+    '''
+    center = ((np.cos(angle))**3, (np.sin(angle))**3)
+    x0, y0 = center
+    x = np.linspace(0, 1.5, 1000)
+    y = np.linspace(0, 1.5, 1000)
+    x, y = np.meshgrid(x, y)
+    plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
+    plt.scatter(x0, y0, c=color)
+
+
+  plot_h_astr_angle(np.pi/4, 'r')
+  plot_h_astr_angle(np.pi/3, 'r')
+  plt.show()
+
+hyperbola_astroid_plot()
 
 
 class Quasar(Conic):
@@ -152,11 +289,13 @@ class Quasar(Conic):
 
     self.quasar_rotator(-self.psi)
 
-    #self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+    self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+
+    self.quasar_hyperbola_center = self.quasar_hyperbola.center
 
     self.theta_23 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[1])
 
-    #self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
+    self.ratio = self.configuration_angles[1]/(self.angle_difference(np.pi/2, self.configuration_angles[2]))
 
     #self.configurationInvariant = self.Calculate_configuration_invariant(self.configuration_angles)
 
@@ -166,20 +305,16 @@ class Quasar(Conic):
 
     self.causticity = self.calculate_causticity()
 
-    #self.new_causticity = self.calculate_new_causticity()
+    self.new_causticity = self.calculate_new_causticity()
 
     self.astroidal_angle = self.calculate_astroidal_angle()
 
-    self.mag_array = [1,1,1,1]
-    for i in range(4):
-      self.mag_array[i] = 1/(np.cos(2*self.configuration_angles[i])+self.causticity*(-np.cos(self.configuration_angles[i])*(np.cos(self.astroidal_angle))**3 + np.sin(self.configuration_angles[i])*(np.sin(self.astroidal_angle))**3))
+    self.property_checker()
 
-    #self.property_checker()
+    t2 = self.configuration_angles[1]
+    t3 = self.configuration_angles[2]
+    self.fake_astroidal_angle = np.arctan((np.tan(t2)*np.tan(t3)*np.tan((t2+t3)/2)))
 
-    
-    #t2 = self.configuration_angles[1]
-    #t3 = self.configuration_angles[2]
-    #self.fake_astroidal_angle = np.arctan((np.tan(t2)*np.tan(t3)*np.tan((t2+t3)/2)))
 
 
   
@@ -273,6 +408,8 @@ class Quasar(Conic):
       new_configurational_angles[i] = angle_sum(self.configuration_angles[i], phi)
     self.configuration_angles = new_configurational_angles
     self.configuration_angles_to_coordinates(new_configurational_angles)
+    self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+    self.quasar_hyperbola_center = self.quasar_hyperbola.center
 
   def angle_difference(self, a1, a2):
       positive_difference = abs(a1 - a2)
@@ -382,6 +519,15 @@ class Quasar(Conic):
     if abs(a-b) > epsilon:
       self.__str__()
       raise Exception("property 2 lost")
+    '''
+    property 3
+    center of hyperbola = centroid of plotted configurations
+    '''
+    x_sum = np.sum(self.quasar_norm_array[:,0])
+    y_sum = np.sum(self.quasar_norm_array[:,1])
+    if abs((x_sum/2 - self.quasar_hyperbola_center[0])**2 + (y_sum/2 - self.quasar_hyperbola_center[1])**2)>epsilon:
+      self.__str__()
+      raise Exception("property 3 lost")
     
 
 
@@ -395,25 +541,21 @@ class Quasar(Conic):
     plt.gca().add_artist( cc )
     # zip joins x and y coordinates in pairs
     j=0
-    for x,y in zip(xs,ys):
-        j += 1
-        label = j
-        if j == 1:
-          offset = (-15, -5)
-        elif j == 3:
-          offset = (0,7)
-        elif j==2:
-          offset = (15,-6)
-        elif j==4:
-          offset = (0, -25)
-        else:
-          raise(Exception("Why you hurt me in this way :("))
-        plt.annotate(label, # this is the text
-                    (x,y), # this is the point to label
-                    textcoords="offset points", # how to position the text
-                    xytext=offset, # distance from text to points (x,y)
-                    ha='center',
-                    size = 20)
+
+  def plot2(self, marker_shape):
+      radius_ratio = 1
+      xs,ys = self.quasar_norm_array[:,0]*radius_ratio, self.quasar_norm_array[:,1]*radius_ratio
+      e = AlignedEllipse((xs[0], ys[0]),(xs[1], ys[1]),(xs[2], ys[2]),(xs[3], ys[3]))
+      e.plot()
+      # plot the points
+      if marker_shape=='o':
+        plt.scatter(xs,ys,c='r', marker = marker_shape, zorder = 3, s=400)
+      else:
+        plt.scatter(xs,ys,c='#d62728', marker = marker_shape, zorder = 2, s=160)
+      plt.gca().set_aspect('equal')
+      # zip joins x and y coordinates in pairs
+      j=0
+      #plt.show()
 
   def __str__(self):
     print("Configuration Angles", self.configuration_angles)
@@ -428,128 +570,72 @@ class Quasar(Conic):
     
 
 
+def WynneSchechterConstructionPlot():
+  with open("causticity.txt", "rb") as fp:   # Unpickling
+    new_Quasar_list = pickle.load(fp)
+  Q = new_Quasar_list[0][0]
+  angles = Q.configuration_angles
+  a = 1.5
+  b= 1
+  c1 = (a*np.cos(angles[0]), b*np.sin(angles[0]))
+  c2 = (a*np.cos(angles[1]), b*np.sin(angles[1]))
+  c3 = (a*np.cos(angles[2]), b*np.sin(angles[2]))
+  c4 = (a*np.cos(angles[3]), b*np.sin(angles[3])) 
+  ell = AlignedEllipse(c1, c2, c3, c4)
+  hyp = RectangularHyperbola(c1, c2, c3, c4)
+  plt.axis('off')
+  plt.gca().set_aspect('equal')
+  # hyp.plot()
+  # plt.savefig('hyperbola.pdf', bbox_inches = 'tight',pad_inches = 0)
+  # plt.show()
+  ell.plot()
+  plt.axis('off')
+  plt.gca().set_aspect('equal')
+  #Q.quasar_hyperbola.plot()
+  plt.savefig('ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+  plt.show()
+  # fig_size= [8,8]
+  # plt.rcParams["figure.figsize"] = fig_size
+  # ell.plot()
+  # hyp.plot(True)
+  # plt.axis('off')
+  # plt.gca().set_aspect('equal')
+  # plt.savefig('combined_hyp_ellipse.pdf', bbox_inches = 'tight',pad_inches = 0)
+  # plt.show()
 
 
+def WynneSchechter_ACP_construction():
+  with open("quasar_ca_2.txt", "rb") as fp:   # Unpickling
+    result = pickle.load(fp)
+  #plot_causticity_astroidal_angle(new_Quasar_list)
+  
+  fig_size= [8,8]
+  plt.rcParams["figure.figsize"] = fig_size
+  print(result)
+  ax = plt.gca()
+  ax.set_xlim(-1.2, 1.2)
+  ax.set_ylim(-1.5, 1.5)
+  plt.scatter(0,0, s=800, marker='*', c= 'orange', zorder=20)
+  plt.axis('off')
 
-def Quasar_test():
-    Quasar_list = []
-    #Quasar 1
-    c1 = (-0.4687227116946,-0.1394554969222)
-    c2 = (-0.2645759507525,0.4191047269303)
-    c3 = (0.4685837614644,0.2194239159365)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 2
-    c1 = (-0.37363,-0.09213)
-    c2 = (0.45774,0.47197)
-    c3 = (0.27179,-0.29896)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 3
-    c1 = (-0.3314531487923,-0.478088981895)
-    c2 = (-0.3378506885721,0.3276875521858)
-    c3 = (0.3677931950746,0.2397434370077)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 4
-    c1 = (0.2307217097772,-0.6029347861578)
-    c2 = (-0.0402895474632,-0.2970055432608)
-    c3 = (-0.214509849381,0.2959060883864)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 5
-    c1 = (-0.1920684745075,-0.2062297547996)
-    c2 = (-0.2103383237915,0.1559403721496)
-    c3 = (0.694766090173,-0.2686633488896)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 6
-    c1 = (-0.1067352528558,-0.2047789838924)
-    c2 = (0.8401975696417,0.0689982256173)
-    c3 = (0.4967102553992,0.5968091209585)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    i = 0
-    for Q in Quasar_list:
-        i += 1
-        print("configurational angles", Q.configuration_angles)
-        print("Quasar norm array", Q.quasar_norm_array)
-        print("circle equation", Q.quasar_circle.equation)
-        print("Quasar_coordinates", Q.quasar_norm_array)
-        print("sum_X=", Q.quasar_norm_array[:,0].sum())
-        print("sum_Y=", Q.quasar_norm_array[:,1].sum())
-        print("separation Invariant",i, Q.separationInvariant)
-        print("configuration(KK) Invariant",i,Q.configurationInvariant)
-        print("diff_WW_KK",i,Q.diff_WW_KK)
-        print('theta_23', Q.theta_23)
-        print('ratio', Q.ratio)
-        print('astroidal difference', Q.astroidal_angle - Q.fake_astroidal_angle)
+  result[0][0].plot2('o')
+  result[0][0].quasar_hyperbola.plot()
+  plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
 
-def nongrid_Quasar_plot():   
-    Quasar_list = []
-    #Quasar 1
-    c1 = (-0.4687227116946,-0.1394554969222)
-    c2 = (-0.2645759507525,0.4191047269303)
-    c3 = (0.4685837614644,0.2194239159365)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 2
-    c1 = (-0.37363,-0.09213)
-    c2 = (0.45774,0.47197)
-    c3 = (0.27179,-0.29896)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 3
-    c1 = (-0.3314531487923,-0.478088981895)
-    c2 = (-0.3378506885721,0.3276875521858)
-    c3 = (0.3677931950746,0.2397434370077)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 4
-    c1 = (0.2307217097772,-0.6029347861578)
-    c2 = (-0.0402895474632,-0.2970055432608)
-    c3 = (-0.214509849381,0.2959060883864)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 5
-    c1 = (-0.1920684745075,-0.2062297547996)
-    c2 = (-0.2103383237915,0.1559403721496)
-    c3 = (0.694766090173,-0.2686633488896)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    #Quasar 6
-    c1 = (-0.1067352528558,-0.2047789838924)
-    c2 = (0.8401975696417,0.0689982256173)
-    c3 = (0.4967102553992,0.5968091209585)
-    Q = Quasar(c1, c2, c3)
-    Quasar_list.append(Q)
-    i = 0 
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 12
-    plt.rcParams["figure.figsize"] = fig_size
-    for Q in Quasar_list:
-        i += 1
-        if i<4:
-            xs,ys = Q.quasar_norm_array[:,0] + 3*i, Q.quasar_norm_array[:,1]
-            cc = plt.Circle(( 3*i , 0 ), 1 , alpha=0.1) 
-        if i>3:
-            xs,ys = Q.quasar_norm_array[:,0] + 3*i - 9, Q.quasar_norm_array[:,1] +3
-            cc = plt.Circle(( 3*i -9 , 3 ), 1 , alpha=0.1) 
-        # plot the points
-        plt.scatter(xs,ys)
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc ) 
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=(0,10), # distance from text to points (x,y)
-                        ha='center')
+  # result[1][0].plot2('o')
+  # result[1][0].quasar_hyperbola.plot()
+  # plt.savefig('wynne_schechter_construction_square.pdf', bbox_inches = 'tight',pad_inches = 0)
+
+  # result[2][0].plot2('o')
+  # result[2][0].quasar_hyperbola.plot()
+  # plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
+
+  # result[3][0].plot2('o')
+  # result[3][0].quasar_hyperbola.plot()
+
+  plt.show()
+
+#WynneSchechter_ACP_construction()
 
 def Hyperbola_test():
     H = RectangularHyperbola((4-1,1/4-1),(-2,-2),(-1/2,1), (4,0.2-1))
@@ -563,715 +649,22 @@ def Circle_test():
     print(C.equation)
     C.plot()    
 
-def Quasar_grid_plot_test():
-    del_1 = np.linspace(0.01, np.pi/2, num=7, endpoint=False)
-    del_2 = np.linspace(0.01, np.pi, num=7, endpoint = False)
-    Quasar_list = []
-    for i in del_1:
-        for j in del_2:
-            a1 = i
-            a2 = i+j
-            c1 = (2,0)
-            c2 = (1+np.cos(a1), np.sin(a1))
-            c3 = (1+np.cos(a2), np.sin(a2))
-            try:
-                Q = Quasar(c1, c2, c3)
-                Quasar_tuple = (Q, Q.theta_23, Q.ratio)
-                print(Q.theta_23, Q.ratio)
-                if Q.ratio < 2:
-                    Quasar_list.append(Quasar_tuple)
-            except np.linalg.LinAlgError:
-                print("linalg err")
-            except:
-                print("bad err")
 
-    # print(Q.quasar_norm_array)
-    i = 0
-    #Quasar_list = Quasar_list[:1]
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 30
-    fig_size[1] = 12
-    plt.rcParams["figure.figsize"] = fig_size
-    L = len(Quasar_list)
-    for Quasar_tuple in Quasar_list:
-        i += 1
-        Q, theta_23, ratio = Quasar_tuple
-        N = int(np.sqrt(L))
-        xs,ys = Q.quasar_norm_array[:,0] + 20*theta_23, Q.quasar_norm_array[:,1] + 10*ratio
-        cc = plt.Circle(( 20*theta_23 , 10*ratio ), 1 , alpha=0.1) 
-        # plot the points
-        plt.scatter(xs,ys)
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc ) 
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=(0,5), # distance from text to points (x,y)
-                        ha='center')
-
-def Quasar_random_grid_plot_test():
-    N = 20000
-    random.seed(3)
-    Quasar_list = []
-    theta_23_divisions = 3
-    ratio_divisions = 2
-    plotting_dictionary = dict.fromkeys((np.ndindex((theta_23_divisions + 1,ratio_divisions + 1))),0 )
-    ratio_max = 1
-    ratio_min = 0
-    theta_23_max = np.pi/2
-    theta_23_min = 0
-    def rounding_error(a):
-        return abs(a-round(a))
-    for i in range(N):
-        del_1 = random.uniform(0, 10*np.pi)
-        del_2 = random.uniform(0, 10*np.pi)
-        a1 = del_1
-        a2 = del_1 + del_2
-        c1 = (2,0)
-        c2 = (1+np.cos(a1), np.sin(a1))
-        c3 = (1+np.cos(a2), np.sin(a2))
-        try:
-            Q = Quasar(c1, c2, c3)
-            Quasar_tuple = (Q, Q.theta_23, Q.ratio)
-            #print(Q.theta_23, Q.ratio)
-            theta_23 =  Q.theta_23
-            ratio = Q.ratio
-            a = round(theta_23_divisions*(theta_23 -  theta_23_min)/(theta_23_max - theta_23_min))
-            b = round(ratio_divisions*(ratio-ratio_min)/(ratio_max-ratio_min))
-            if plotting_dictionary[(a,b)] == 0:
-                Quasar_list.append(Quasar_tuple)
-                ind = len(Quasar_list) - 1
-                plotting_dictionary[(a,b)] = (Q, ind)
-            else:
-                ind =  plotting_dictionary[(a,b)][1]
-                old_Q_theta_23, old_Q_ratio = Quasar_list[ind][1], Quasar_list[ind][2]
-                if (rounding_error(theta_23_divisions*(theta_23 -  theta_23_min)/(theta_23_max - theta_23_min)) + rounding_error(ratio_divisions*(ratio-ratio_min)/(ratio_max-ratio_min))) < (rounding_error(theta_23_divisions*(old_Q_theta_23 -  theta_23_min)/(theta_23_max - theta_23_min)) + rounding_error(ratio_divisions*(old_Q_ratio-ratio_min)/(ratio_max-ratio_min))):
-                    Quasar_list[ind] = Quasar_tuple
-                    plotting_dictionary[(a,b)] = (Q, ind)
-        except np.linalg.LinAlgError:
-            print("linalg err")
-        except KeyError:
-            print("theta_23 or ratio out of bounds")
-        #except:
-         #   print("bad err")
-    with open("test.txt", "wb") as fp:   #Pickling
-      pickle.dump(Quasar_list, fp)
-    return Quasar_list
-
-def Plot_Quasars(Quasar_list):
-    i = 0
-    fig_size = plt.rcParams["figure.figsize"]
-    fig_size[0] = 15
-    fig_size[1] = 10
-    plt.rcParams["figure.figsize"] = fig_size
-    #L = len(Quasar_list)
-    for Quasar_tuple in Quasar_list:
-        i += 1
-        Q, theta_23, ratio = Quasar_tuple
-        radius_ratio = 1/6
-        xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + theta_23, Q.quasar_norm_array[:,1]*radius_ratio + ratio
-        cc = plt.Circle((theta_23 , ratio ), radius_ratio , alpha=0.1)
-        # plot the points
-        plt.scatter(xs,ys,c='#d62728', marker = 'o')
-        plt.gca().set_aspect('equal')
-        plt.gca().add_artist( cc )
-        # zip joins x and y coordinates in pairs
-        j=0
-        for x,y in zip(xs,ys):
-            j += 1
-            label = j
-            if j == 1:
-              offset = (8, -3)
-            elif j == 3:
-              offset = (0,5)
-            elif j==2:
-              offset = (8,-3)
-            elif j==4:
-              offset = (0, -15)
-            else:
-              raise(Exception("Why you hurt me in this way :("))
-            plt.annotate(label, # this is the text
-                        (x,y), # this is the point to label
-                        textcoords="offset points", # how to position the text
-                        xytext=offset, # distance from text to points (x,y)
-                        ha='center',
-                        size = 14)
-    ax1 = plt.gca()
-    ax1.set_ylabel('Ratio')
-    ax1.set_xlabel('$θ_{23}$ (radians)')
-    #plt.show()
 theta_23_err =0
-def all_Quasars_random():
-    global theta_23_err
-    N = 200000
-    random.seed(3)
-    Quasar_list = []
-    #theta_23_divisions = 3
-    #ratio_divisions = 2
-    #plotting_dictionary = dict.fromkeys((np.ndindex((theta_23_divisions + 1,ratio_divisions + 1))),0 )
-    ratio_max = 1
-    ratio_min = 0
-    theta_23_max = np.pi/2
-    theta_23_min = 0
-    #theta_23_array, ratio_array, causticity_array, astroidal_angle_array = [], [], [], []
-    def rounding_error(a):
-        return abs(a-round(a))
-    for i in range(N):
-        del_1 = random.uniform(0, 10*np.pi)
-        del_2 = random.uniform(0, 10*np.pi)
-        a1 = del_1
-        a2 = del_1 + del_2
-        c1 = (2,0)
-        c2 = (1+np.cos(a1), np.sin(a1))
-        c3 = (1+np.cos(a2), np.sin(a2))
-        try:
-            Q = Quasar(c1, c2, c3)
-            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.ratio<ratio_max and Q.ratio>ratio_min:
-              pass
-            else:
-              raise(KeyError)
-            Quasar_tuple = (Q, Q.theta_23, Q.ratio, Q.causticity, Q.astroidal_angle)
-            '''
-            theta_23_array.append(Q.theta_23)
-            ratio_array.append(Q.ratio)
-            causticity_array.append(Q.causticity)
-            astroidal_angle_array.append(Q.astroidal_angle)
-            #print(Q.theta_23, Q.ratio)
-            '''
-            Quasar_list.append(Quasar_tuple)
-        except np.linalg.LinAlgError:
-            print("linalg err")
-        except KeyError:
-            print("theta_23 or ratio out of bounds")
-            theta_23_err += 1
-        #except:
-         #   print("bad err")
-    Quasar_list = np.array(Quasar_list)
-    with open("causticity_new.txt", "wb") as fp:   #Pickling
-      pickle.dump(Quasar_list, fp)
-    return Quasar_list
-
-def plot_astroid(r, gamma = 0):
-  theta = np.linspace(0, np.pi/2, 2000)
+def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
+  theta = np.linspace(0, 2*np.pi, 2000)
 
   radius = r
 
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
-  plt.plot(a,b)
+  plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
+  # y = np.linspace(-0.03,0.03, 100)
+  # x = r*np.ones_like(y)
+  # plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
   '''
   x = np.linspace(0.1, r, 4000)
   y = (r**(2/3) - x**(2/3))**3/2  
   plt.plot(x,y)
   plt.plot(y,x)
   '''
-
-def Quasar_random_grid_angle_difference():
-    global theta_23_err
-    N = 300000
-    random.seed(3)
-    np.random.seed(3)
-    Quasar_list = []
-    theta_12_max = np.pi
-    theta_12_min = 0
-    theta_23_max = np.pi/2
-    theta_23_min = 0
-    def rounding_error(a):
-        return abs(a-round(a))
-    for i in range(N):
-        del_1 = random.uniform(0, 10*np.pi)
-        del_2 = random.uniform(0, 10*np.pi)
-        a1 = del_1
-        a2 = del_1 + del_2
-        c1 = (2,0)
-        c2 = (1+np.cos(a1), np.sin(a1))
-        c3 = (1+np.cos(a2), np.sin(a2))
-        try:
-            Q = Quasar(c1, c2, c3)
-            if Q.theta_23<theta_23_max and Q.theta_23> theta_23_min and Q.theta_12<theta_12_max and Q.theta_12>theta_12_min:
-              pass
-            else:
-              raise(KeyError)
-            Quasar_tuple = (Q, Q.theta_23, Q.theta_12, Q.causticity, Q.astroidal_angle)
-            Quasar_list.append(Quasar_tuple)
-        except np.linalg.LinAlgError:
-            print("linalg err")
-        except KeyError:
-            print("theta_23 or ratio out of bounds")
-            theta_23_err += 1
-        #except:
-         #   print("bad err")
-    Quasar_list = np.array(Quasar_list)
-    with open("angle_difference_list.txt", "wb") as fp:   #Pickling
-      pickle.dump(Quasar_list, fp)
-    return Quasar_list
-
-def angle_difference_contour_plot(Quasar_list):
-  plt.rcParams.update({'font.size': 22})
-  theta_23_array = np.array(Quasar_list[:,1])
-  theta_12_array = np.array(Quasar_list[:, 2])
-  causticity_array = np.array(Quasar_list[:, 3])
-  astroidal_angle_array = np.array(Quasar_list[:,4])
-  x=[]
-  y=[]
-  for i in range(len(causticity_array)):
-      x0 = causticity_array[i]*(np.cos(astroidal_angle_array[i]))**3
-      y0= causticity_array[i]*(np.sin(astroidal_angle_array[i]))**3
-      x.append(x0)
-      y.append(y0)
-      '''
-  for i in range(1000):
-    xr = random.random()
-    yr = random.random()
-    if xr**1.67 + yr**1.67 > 1:
-      x.append(xr)
-      y.append(yr)
-      theta_23_array = np.append(theta_23_array, np.nan)
-      theta_12_array = np.append(theta_12_array, np.nan)
-      '''
-  theta = np.linspace(0, np.pi/2, 2000)
-
-  a = (np.cos(theta))**3
-  b = (np.sin(theta))**3
-  plt.plot(a,b)
-  plt.fill(a,b ,'w', zorder = 3)
-  '''
-  astroidal = True
-  if astroidal:
-    z=[]
-    for i in astroidal_angle_array:
-      z.append(np.arctan(np.cbrt(np.tan(i))))
-  else:
-    z = list(causticity_array)
-  '''
-  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
-  theta_12_array = 180/np.pi*np.array(theta_12_array, dtype=float)
-  ax2 = plt.gca()
-  fig = plt.gcf()
-  #ax2.tricontour(x, y, theta_23_array, levels=9, linewidths=0.5, colors='k')
-  #cntr2 = ax2.tricontourf(x, y, theta_23_array, levels=9, cmap="RdBu_r")
-  plt.tricontour(x, y, theta_12_array, levels=18, linewidths=0.5, colors='k', zorder = 0)
-  cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=18, cmap="RdBu_r",zorder = -1)
-  fig.colorbar(cntr2, ax=ax2)
-  '''
-  ax2.set_ylabel('Ratio')
-  ax2.set_xlabel('$θ_{23}$ (radians)')
-  if astroidal:
-    ax2.set_title("Contour plot of astroidal angle")
-  else:
-    ax2.set_title("Contour plot of causticity")
-  '''
-  plt.yticks([0, 0.25, 0.5, 0.75])
-  plt.yticks([0, 0.25, 0.5, 0.75])
-  plt.savefig('angle_difference_theta_12_contour_plot.pdf')
-  plt.show()
-
-
-def magnification_Quasars_random():
-    global theta_23_err
-    N = 5*(10**6)
-    random.seed(3)
-    np.random.seed(3)
-    Quasar_list = []
-    theta_12_max = np.pi
-    theta_12_min = 0
-    theta_23_max = np.pi/2
-    theta_23_min = 0
-    def rounding_error(a):
-        return abs(a-round(a))
-    for i in range(N):
-        if i%10000 == 0:
-          print(i/10000) 
-        del_1 = random.uniform(0, 10*np.pi)
-        del_2 = random.uniform(0, 10*np.pi)
-        a1 = del_1
-        a2 = del_1 + del_2
-        c1 = (2,0)
-        c2 = (1+np.cos(a1), np.sin(a1))
-        c3 = (1+np.cos(a2), np.sin(a2))
-        try:
-            Q = Quasar(c1, c2, c3)
-            if Q.theta_23>theta_23_max or Q.theta_23< theta_23_min:
-              raise(KeyError)
-            Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
-            Quasar_list.append(Quasar_tuple)  
-        except np.linalg.LinAlgError:
-            print("linalg err")
-        except KeyError:
-            print("theta_23 or ratio out of bounds")
-            theta_23_err += 1
-        #except:
-         #   print("bad err")
-    Quasar_list = np.array(Quasar_list)
-    with open("magnification_list.txt", "wb") as fp:   #Pickling
-      pickle.dump(Quasar_list, fp)
-    return Quasar_list
-
-def magnification_Quasars_specificrandom():
-    global theta_23_err
-    N = 2*(10**6)
-    Quasar_list = []
-    random.seed(3)
-    np.random.seed(3)
-    theta_12_max = np.pi
-    theta_12_min = 0
-    theta_23_max = np.pi/2
-    theta_23_min = 0
-    for i in range(N):
-        del_1 = random.gauss(0, np.pi/50)
-        del_2 = random.uniform(0, 10*np.pi)
-        a1 = del_1
-        a2 = del_2
-        c1 = (2,0)
-        c2 = (1+np.cos(a1), np.sin(a1))
-        c3 = (1+np.cos(a2), np.sin(a2))
-        try:
-            Q = Quasar(c1, c2, c3)
-            if i%10000 == 0:
-              print(i/10000) 
-              #Q.plot()
-              #plt.show()
-            if Q.theta_23>theta_23_max or Q.theta_23< theta_23_min:
-              raise(KeyError)
-            Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
-            Quasar_list.append(Quasar_tuple)  
-        except np.linalg.LinAlgError:
-            print("linalg err")
-        except KeyError:
-            print("theta_23 or ratio out of bounds")
-            theta_23_err += 1
-        #except:
-         #   print("bad err")
-    Quasar_list = np.array(Quasar_list)
-    with open("magnification_list_specific.txt", "wb") as fp:   #Pickling
-      pickle.dump(Quasar_list, fp)
-    return Quasar_list
-
-
-
-def magnification_contour_plot(Quasar_list):
-  plt.rcParams.update({'font.size': 22})
-  theta_23_array = np.array(Quasar_list[:,1])
-  Quasar_mag_0_array = np.array(Quasar_list[:, 2], dtype=float)
-  Quasar_mag_1_array = np.array(Quasar_list[:, 5])
-  Quasar_mag_2_array = np.array(Quasar_list[:, 6])
-  Quasar_mag_3_array = np.array(Quasar_list[:, 7])
-  causticity_array = np.array(Quasar_list[:, 3])
-  astroidal_angle_array = np.array(Quasar_list[:, 4])
-  position_angle_array = np.ones_like(causticity_array)
-  for i in range(len(causticity_array)):
-    if np.arctan(np.tan(astroidal_angle_array[i])**3) == np.arctan(np.tan(astroidal_angle_array[i])**3):
-      position_angle_array[i] = np.arctan(np.tan(astroidal_angle_array[i])**3)
-    else:
-      position_angle_array[i] = np.nan
-  x=list(causticity_array) #theta_23_array
-  y=list(position_angle_array)
-
-  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
-  print(np.shape(x))
-  print(np.shape(y))
-  print(np.shape(theta_23_array))
-  z = Quasar_mag_0_array
-  ax2 = plt.gca()
-  fig = plt.gcf()
-  ax2.tricontour(x, y, z, levels=9, linewidths=0.5, colors='k')
-  cntr2 = ax2.tricontourf(x, y, z, levels=9, cmap="RdBu_r", shading='auto', norm=matplotlib.colors.LogNorm(vmin=z.min(), vmax=z.max()))
-  #plt.tricontour(x, y, theta_12_array, levels=18, linewidths=0.5, colors='k', zorder = 0)
-  #cntr2 = ax2.tricontourf(x, y, theta_12_array, levels=18, cmap="RdBu_r",zorder = -1)
-  fig.colorbar(cntr2, ax=ax2)
-  '''
-  ax2.set_ylabel('Ratio')
-  ax2.set_xlabel('$θ_{23}$ (radians)')
-  if astroidal:
-    ax2.set_title("Contour plot of astroidal angle")
-  else:
-    ax2.set_title("Contour plot of causticity")
-  '''
-  plt.savefig('mag_contour_plot.pdf')
-  plt.show()
-
-def magnification_separator(Quasar_list, phi_s, eps):
-  astroidal_angle_array = np.array(Quasar_list[:, 4])
-  new_Quasar_list = []
-  for i in range(len(Quasar_list)):
-    if 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > phi_s-eps:# and ((Quasar_list[i,2])**2+(Quasar_list[i,5])**2+(Quasar_list[i,6])**2+(Quasar_list[i,7])**2)<max_mag:
-      new_Quasar_list.append(Quasar_list[i])
-    elif 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi < 90-phi_s+eps and 180*np.arctan(np.tan(astroidal_angle_array[i])**3)/np.pi > 90-phi_s-eps:
-      configuration_angles = Quasar_list[i][0]
-      coords = [(1+np.sin(configuration_angles[i]), np.cos(configuration_angles[i])) for i in range(4)]
-      c1, c2, c3, c4 = coords
-      try:
-          Q = Quasar(c1, c2, c3)
-          Quasar_tuple = (Q.configuration_angles, Q.theta_23, Q.mag_array[0], Q.causticity, Q.astroidal_angle,  Q.mag_array[1], Q.mag_array[2], Q.mag_array[3])
-          new_Quasar_list.append(Quasar_tuple)  
-      except np.linalg.LinAlgError:
-          print("linalg err")
-      except KeyError:
-          print("theta_23 or ratio out of bounds")
-          theta_23_err += 1
-  new_Quasar_list = np.array(new_Quasar_list)
-  with open(f"magnification_{phi_s}list_{eps}_specific.txt", "wb") as fp:   #Pickling
-    pickle.dump(new_Quasar_list, fp)
-  return new_Quasar_list
-
-def magnification_plot(Quasar_list, color, iflabel=False):
-  plt.rcParams.update({'font.size': 24, 'figure.figsize':(8.1,7.8)})
-  def keyfunc(narray):
-    return narray[1]
-  Quasar_list = Quasar_list[np.apply_along_axis(keyfunc, axis=1, arr=Quasar_list).argsort()]
-  theta_23_array = np.array(Quasar_list[:,1], dtype=float)
-  Quasar_mag_0_array = np.array(Quasar_list[:, 2], dtype=float)
-  Quasar_mag_1_array = np.array(Quasar_list[:, 5], dtype=float)
-  Quasar_mag_2_array = np.abs(np.array(Quasar_list[:, 6], dtype=float))
-  Quasar_mag_3_array = np.abs(np.array(Quasar_list[:, 7], dtype=float))
-  causticity_array = np.array(Quasar_list[:, 3], dtype=float)
-  causticitylog_array = np.log(causticity_array)
-  astroidal_angle_array = np.array(Quasar_list[:, 4])
-  position_angle_array = np.ones_like(causticity_array)
-  for i in range(len(causticity_array)):
-    if np.arctan(np.tan(astroidal_angle_array[i])**3) == np.arctan(np.tan(astroidal_angle_array[i])**3):
-      position_angle_array[i] = np.arctan(np.tan(astroidal_angle_array[i])**3)
-    else:
-      position_angle_array[i] = np.nan
-  theta_23_array = 180/np.pi*np.array(theta_23_array, dtype=float)
-  theta_23log_array = np.log(theta_23_array)
-  ymax = 5
-  #x = list(theta_23log_array)
-  #x = list(causticitylog_array)
-  #y = [list(Quasar_maglog_0_array), list(Quasar_maglog_1_array),list(Quasar_maglog_2_array), list(Quasar_maglog_3_array)]
-  x = list(theta_23_array)
-  y = [list(Quasar_mag_0_array), list(Quasar_mag_1_array),list(Quasar_mag_2_array), list(Quasar_mag_3_array)]
-  
-  '''
-  for j in range(4):
-    for i in range(len(y[j])):
-      if y[j][i]**2 > ymax**2:
-        y[j][i] = np.nan
-        #print('affected')
-
-
-  ynew=[0,0,0,0]
-  
-  for i in (1,2):
-    tck = interpolate.splrep(x, y[i])
-    ynew[i] = interpolate.splev(x, tck, der=0)
-    #plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=color)
-    plt.scatter(x, y[i], label = i+1)
-  #plt.ylim(-ymax,ymax)
-  
-  plt.scatter(x, y[1], label = 2, c='r')
-  plt.scatter(x, y[2], label = 3, c='g')
-  '''
-  def colorfn(i):
-    if i == 1:
-      return 'r'
-    elif i==2:
-      return 'g'
-    elif i==3:
-      return 'k'
-    elif i==0:
-      return 'c'
-    else:
-      raise(Exception('color not defined'))
-  ynew=[0,0,0,0]
-  def smooth(i):
-    if i ==0 or i==3:
-      return 2.4
-    elif i == 2 or i ==1:
-      return 100
-    else:
-      raise(Exception())
-  if iflabel:
-    for i in range(4):
-      tck = interpolate.splrep(x, y[i], s=smooth(i))
-      ynew[i] = interpolate.splev(x, tck, der=0)
-      #plt.plot(x, ynew[i], label = i+1, linewidth = 4, c=colorfn(i))
-      plt.scatter(x, y[i], label = i+1, linewidth = 4, c=colorfn(i), s=4)
-  else:
-    for i in range(4):
-      tck = interpolate.splrep(x, y[i], s=10)
-      ynew[i] = interpolate.splev(x, tck, der=0)
-      #plt.plot(x, ynew[i], linewidth = 4, c=colorfn(i))    
-      plt.scatter(x, ynew[i], linewidth = 4, c=colorfn(i), s=4)    
-    #plt.scatter(x, y[i], label = i+1)
-  #plt.ylim(-ymax,ymax)
-  ax = plt.gca()
-  ax.set_yscale('log')
-  ax.set_xscale('log')
-  plt.xlim(100,1)
-  plt.ylim(0.3,100)
-  plt.gca().set_aspect('equal')
-
-
-
-phi_1_s = 2
-phi_1_eps = 0.002
-phi_2_s = 30
-phi_2_eps = 0.01
-
-  
-'''
-#magnification_Quasars_random()
-#magnification_Quasars_specificrandom()
-
-# with open("magnification_list_specific.txt", "rb") as fp:   # Unpickling
-#   old2_Quasar_list = pickle.load(fp)
-# with open("magnification_list.txt", "rb") as fp:   # Unpickling
-#   old1_Quasar_list = pickle.load(fp)
-# new_Quasar_list = np.append(old1_Quasar_list, old2_Quasar_list, axis = 0)
-# print(np.shape(new_Quasar_list[0,0]))
-
-# phi_1_mag_list = magnification_separator(new_Quasar_list, phi_1_s, phi_1_eps)
-# print(len(phi_1_mag_list))
-
-# phi_2_mag_list = magnification_separator(new_Quasar_list, phi_2_s, phi_2_eps)
-# print(len(phi_2_mag_list))
-
-with open(f"magnification_{phi_1_s}list_{phi_1_eps}_specific.txt", "rb") as fp:   # Unpickling
-  phi_1_mag_list = pickle.load(fp)
-with open(f"magnification_{phi_2_s}list_{phi_2_eps}_specific.txt", "rb") as fp:   # Unpickling
-  phi_2_mag_list = pickle.load(fp)
-magnification_plot(phi_1_mag_list, 'r', True)
-magnification_plot(phi_2_mag_list, 'g')
-#labelLines(plt.gca().get_lines(), zorder=2.5, align=False, color='k', xvals = (10,90))
-plt.legend(loc=2)
-#my_legend()
-'''
-'''
-plt.annotate('$\phi_s = 40°$', # this is the text
-            (1.8,18), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 40°$', # this is the text
-            (2,0.93), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 5°$', # this is the text
-            (2,1.9), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 5°$', # this is the text
-            (2,0.44), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 5°$', # this is the text
-            (4,40), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-'''
-'''
-plt.annotate('$\phi_s = 30°$', # this is the text
-            (1.8,18), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 30°$', # this is the text
-            (2,1), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 2°$', # this is the text
-            (2,1.9), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 2°$', # this is the text
-            (2,0.4), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-plt.annotate('$\phi_s = 2°$', # this is the text
-            (6,40), # this is the point to label
-            textcoords="offset points", # how to position the text
-            xytext=(0,0), # distance from text to points (x,y)
-            ha='center',
-            size = 22,
-            weight='bold')
-ax = plt.gca()
-plt.xlabel(r'$\theta_{23}$ in degrees')
-
-plt.ylabel(r'$\left|\frac{\mu_i}{\mu^{sq}_i}\right|$', rotation=0, size = 32)
-ax.yaxis.set_label_coords(-0.2, 0.25)
-
-plt.savefig("mag_plot_modified_with_1and4_more_smoothening_2_30.pdf")
-plt.show()
-'''
-#Quasar_list = all_Quasars_random()
-
-#Quasar_list = Quasar_random_grid_plot_test()
-
-#Quasar_list = Quasar_random_ca_plot()
-
-#Quasar_list = Quasar_random_ca_plot_four_sided()
-
-#Quasar_list = Quasar_random_shear_plot()
-'''
-with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-new_Quasar_list[2][0].plot()
-plt.axis('off')
-ax = plt.gca()
-ax.set_xlim(-1.05, 1)
-ax.set_ylim(-1.05,1)
-plt.savefig('Labeling_conv.pdf')
-plt.show()
-#plot_quasars_shear_try2(new_Quasar_list)
-'''
-'''
-with open("plot_quasars_shear.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-'''
-#Plot_quasars_shear(new_Quasar_list)
-'''
-with open("test.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-#Plot_Quasars(new_Quasar_list)
-#plt.show()
-'''
-
-'''
-with open("causticity.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-#plot_causticity_astroidal_angle(new_Quasar_list)
-'''
-'''
-#all_Quasars_random()
-with open("causticity_new.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
-contour_plot_causticity_astroidal_angle(new_Quasar_list)
-#plt.savefig("astroidal angle contour plot.pdf")
-print("Number of theta_23 errors is", theta_23_err)
-'''
-#Quasar_test()
-
-
-end_time = time.monotonic()
-print(timedelta(seconds=end_time - start_time))
