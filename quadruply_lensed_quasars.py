@@ -66,9 +66,9 @@ class Circle(Conic):
             plt.axvline(0, alpha=.1)
         axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
-        plt.plot(self.c1[0], self.c1[1], 'r+')
-        plt.plot(self.c2[0], self.c2[1], 'r+')
-        plt.plot(self.c3[0], self.c3[1], 'r+')
+        # plt.plot(self.c1[0], self.c1[1], 'r+')
+        # plt.plot(self.c2[0], self.c2[1], 'r+')
+        # plt.plot(self.c3[0], self.c3[1], 'r+')
 
 class AlignedEllipse(Conic):
     def __init__(self, c1, c2, c3, c4, iscentered=False):
@@ -240,27 +240,42 @@ def hyperbola_astroid_plot():
   ax.set_xlim(-1.2, 1.2)
   ax.set_ylim(-1.5, 1.5)
   ax.set_aspect('equal')
-  plt.scatter(0,0, s=100, marker='o', c= 'orange', zorder=20)
+  plt.scatter(0,0, s=50, marker='o', c= 'k', zorder=20)
   plt.axis('off')
   plot_astroid(1)
-  eps = 10**(-5)
+  eps = 10**(-10)
   C = Circle((0,1), (1,0), (-1,0))
   C.plot()
-  def plot_h_astr_angle(angle, color, linestyles='solid', zorder = -3):
+  def plot_h_astr_angle(angle, color='r', linestyles='solid', zorder = -3, max_coord = 1.5):
     '''
     given an astroidal angle for center of the hyperbola, plots the hyperbola corresponding to unit radius
     '''
     center = ((np.cos(angle))**3, (np.sin(angle))**3)
     x0, y0 = center
-    x = np.linspace(0, 1.5, 1000)
-    y = np.linspace(0, 1.5, 1000)
+    if x0*y0==0:
+      raise(Exception('please give astroidal angle not multiple of pi/2'))
+    if x0> 0 :
+      x=np.linspace(0, max_coord, 1000)
+    else:
+      x=np.linspace(-max_coord, 0,1000)
+    if y0>0:
+      y=np.linspace(0, max_coord, 1000)
+    else:
+      y=np.linspace(-max_coord, 0,1000)
     x, y = np.meshgrid(x, y)
     plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
-    plt.scatter(x0, y0, c=color)
-
-
-  plot_h_astr_angle(np.pi/4, 'r')
-  plot_h_astr_angle(np.pi/3, 'r')
+    plt.scatter(x0, y0, c='b')
+    if (angle- np.pi/4)**2<eps:
+      otherx = np.linspace(-max_coord, 0.5, 1000)
+      othery = np.linspace(-max_coord, 0.5, 1000)
+      otherx, othery = np.meshgrid(otherx, othery)
+      plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
+  plt.scatter(0.1, 0.4, c='orange', s=50)
+  angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
+  new_angles_to_plot = [eps, np.pi/6,np.pi/4, np.pi/3,  np.pi/2-eps,  np.pi/2+eps,2*np.pi/3, 3*np.pi/4,5*np.pi/6, np.pi-eps, np.pi+eps,-eps, -np.pi/6,-np.pi/4, -np.pi/3, -np.pi/2+eps,  -np.pi/2-eps, -5*np.pi/6, -3*np.pi/4, -2*np.pi/3]
+  for a in new_angles_to_plot:
+    plot_h_astr_angle(a)
+  plt.savefig('hyperbola_astroid_many.pdf')
   plt.show()
 
 hyperbola_astroid_plot()
