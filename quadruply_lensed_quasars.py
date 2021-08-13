@@ -265,12 +265,23 @@ def hyperbola_astroid_plot():
     x, y = np.meshgrid(x, y)
     plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
     plt.scatter(x0, y0, c='b')
-    if (angle- np.pi/4)**2<eps:
+    if (angle- np.pi/4)**2<eps and False:
       otherx = np.linspace(-max_coord, 0.5, 1000)
       othery = np.linspace(-max_coord, 0.5, 1000)
       otherx, othery = np.meshgrid(otherx, othery)
       plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
-  plt.scatter(0.1, 0.4, c='orange', s=50)
+  x0, y0 = 0.1, 0.4
+  color, linestyles, max_coord = 'r', 'solid', 1.5
+  plt.scatter(x0, y0, c='orange', s=50)
+  x=np.linspace(0, max_coord,1000)
+  y=np.linspace(0, max_coord,1000)
+  x, y = np.meshgrid(x, y)
+  plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
+  otherx = np.linspace(-max_coord, 0.5, 1000)
+  othery = np.linspace(-max_coord, 0.5, 1000)
+  otherx, othery = np.meshgrid(otherx, othery)
+  plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
+
   angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
   new_angles_to_plot = [eps, np.pi/6,np.pi/4, np.pi/3,  np.pi/2-eps,  np.pi/2+eps,2*np.pi/3, 3*np.pi/4,5*np.pi/6, np.pi-eps, np.pi+eps,-eps, -np.pi/6,-np.pi/4, -np.pi/3, -np.pi/2+eps,  -np.pi/2-eps, -5*np.pi/6, -3*np.pi/4, -2*np.pi/3]
   for a in new_angles_to_plot:
