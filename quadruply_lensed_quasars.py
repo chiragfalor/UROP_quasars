@@ -1208,8 +1208,8 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     #ax1.set_title("Max Causticity = "+str(max_causticity))
     plt.axis('off')
     ax1.set_xlim(-1.2, 1.3)
-    ax1.set_ylim(-1.2,1.2)
-    plt.savefig('4_sided_astroid.pdf')
+    ax1.set_ylim(-1.05,1.2)
+    plt.savefig('4_sided_astroid.pdf', bbox_inches = 'tight',pad_inches = 0)
     plt.show()
 
 def plot_quasars_shear_try2(Quasar_list):
