@@ -65,7 +65,7 @@ class Circle(Conic):
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
         axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', zorder = -10)
         # plt.plot(self.c1[0], self.c1[1], 'r+')
         # plt.plot(self.c2[0], self.c2[1], 'r+')
         # plt.plot(self.c3[0], self.c3[1], 'r+')
@@ -263,26 +263,28 @@ def hyperbola_astroid_plot():
     else:
       y=np.linspace(-max_coord, 0,1000)
     x, y = np.meshgrid(x, y)
-    plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
     plt.scatter(x0, y0, c='b')
-    if (angle- np.pi/4)**2<eps and False:
-      otherx = np.linspace(-max_coord, 0.5, 1000)
-      othery = np.linspace(-max_coord, 0.5, 1000)
+    if (angle- np.pi/4)**2<eps:
+      otherx = np.linspace(-max_coord, max_coord, 1000)
+      othery = np.linspace(-max_coord, max_coord, 1000)
       otherx, othery = np.meshgrid(otherx, othery)
       plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
-  x0, y0 = 0.1, 0.4
+    else:
+      plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
+  x0, y0 = -0.1, 0.4
   color, linestyles, max_coord = 'r', 'solid', 1.5
   plt.scatter(x0, y0, c='orange', s=50)
-  x=np.linspace(0, max_coord,1000)
-  y=np.linspace(0, max_coord,1000)
+  x=np.linspace(-max_coord, max_coord,1000)
+  y=np.linspace(-max_coord, max_coord,1000)
   x, y = np.meshgrid(x, y)
-  plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors=color, zorder = -3, linestyles = linestyles)
-  otherx = np.linspace(-max_coord, 0.5, 1000)
-  othery = np.linspace(-max_coord, 0.5, 1000)
-  otherx, othery = np.meshgrid(otherx, othery)
-  plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
-  intersectionx, intersectiony = [0.16829, 0.8928, -0.9325, 0.07138], [0.9857, 0.4505, 0.3613, -0.9974]
-  angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
+  plt.contour(x, y,(x*y-x0*y-y0*x), [0], colors='orange', zorder = -3, linestyles = 'dashed')
+  # otherx = np.linspace(-max_coord, 0.5, 1000)
+  # othery = np.linspace(-max_coord, 0.5, 1000)
+  # otherx, othery = np.meshgrid(otherx, othery)
+  # plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
+  intersectionx, intersectiony = [-0.16829, -0.8928, 0.9325, -0.07138], [0.9857, 0.4505, 0.3613, -0.9974]
+  plt.scatter(intersectionx, intersectiony, s=100,marker='*', c='darkorange', zorder = 10)
+  #angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
   new_angles_to_plot = [eps, np.pi/6,np.pi/4, np.pi/3,  np.pi/2-eps,  np.pi/2+eps,2*np.pi/3, 3*np.pi/4,5*np.pi/6, np.pi-eps, np.pi+eps,-eps, -np.pi/6,-np.pi/4, -np.pi/3, -np.pi/2+eps,  -np.pi/2-eps, -5*np.pi/6, -3*np.pi/4, -2*np.pi/3]
   for a in new_angles_to_plot:
     plot_h_astr_angle(a)
