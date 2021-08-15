@@ -283,12 +283,12 @@ def hyperbola_astroid_plot():
   # otherx, othery = np.meshgrid(otherx, othery)
   # plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
   intersectionx, intersectiony = [-0.16829, -0.8928, 0.9325, -0.07138], [0.9857, 0.4505, 0.3613, -0.9974]
-  plt.scatter(intersectionx, intersectiony, s=100,marker='*', c='darkorange', zorder = 10)
+  plt.scatter(intersectionx, intersectiony, s=200,marker='*', c='darkorange', zorder = 10)
   #angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
   new_angles_to_plot = [eps, np.pi/6,np.pi/4, np.pi/3,  np.pi/2-eps,  np.pi/2+eps,2*np.pi/3, 3*np.pi/4,5*np.pi/6, np.pi-eps, np.pi+eps,-eps, -np.pi/6,-np.pi/4, -np.pi/3, -np.pi/2+eps,  -np.pi/2-eps, -5*np.pi/6, -3*np.pi/4, -2*np.pi/3]
   for a in new_angles_to_plot:
     plot_h_astr_angle(a)
-  plt.savefig('hyperbola_astroid_many.pdf')
+  plt.savefig('hyperbola_astroid_many.pdf', bbox_inches = 'tight',pad_inches = 0)
   plt.show()
 
 hyperbola_astroid_plot()
