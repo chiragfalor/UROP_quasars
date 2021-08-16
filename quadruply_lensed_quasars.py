@@ -1014,14 +1014,14 @@ def Quasar_random_shear_plot():
   return Quasar_list
 
 def Quasar_random_ca_plot_final():
-  N = 100000
+  N = 200000
   random.seed(2)
   Quasar_list = []
   max_causticity = 0.95
   alpha_divisions = 5
   plot_astroid(max_causticity)
   plot_astroid(max_causticity/2)
-  plotting_dictionary = {(0.8, np.pi/2):0,(0.6, np.pi/2):0,(0.5, np.pi/2):0,(0.7, np.pi/2):0,(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
+  plotting_dictionary = {(0.75, np.pi/2):0,(0.8, np.pi/2):0,(0.6, np.pi/2):0,(0.5, np.pi/2):0,(0.7, np.pi/2):0,(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
   error_ratio = (np.pi/2)**2
   def rounding_error(a):
       return abs(a-round(a))
@@ -1131,7 +1131,7 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     # Q2=deepcopy(Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0])
     # Q2.quasar_rotator(-np.pi/2)
     # Tuple_2 = (Q2, max_causticity, np.pi)
-    Q2_causticity = 0.7
+    Q2_causticity = 0.75
     Q2 = Quasar_list[plotting_dictionary[(Q2_causticity, np.pi/2)][1]][0]
     Q2.quasar_rotator(-np.pi/2)
     Tuple_2 = (Q2, Q2_causticity, np.pi)
@@ -1179,6 +1179,7 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
         radius_ratio = 1/5
         xs,ys = Q.quasar_norm_array[:,0]*radius_ratio + new_causticity*(np.cos(astroidal_angle))**3, Q.quasar_norm_array[:,1]*radius_ratio + new_causticity*(np.sin(astroidal_angle))**3
         cc = plt.Circle((new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3 ), radius_ratio , alpha=0.16, zorder = 0)
+        plt.scatter(new_causticity*(np.cos(astroidal_angle))**3 ,new_causticity*(np.sin(astroidal_angle))**3, color='k', s=10)
         # plot the points
         plt.scatter(xs,ys,c='#d62728', marker = 'o', s=300, zorder = 2)
         plt.gca().set_aspect('equal')
