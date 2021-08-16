@@ -186,8 +186,8 @@ class RectangularHyperbola(Conic):
         return (x**2-y**2, x*y, x, y)
 
     def plot(self, points=False):
-        x = np.linspace(-2, 2, 400)
-        y = np.linspace(-2, 2, 400)
+        x = np.linspace(-2, 2, 4000)
+        y = np.linspace(-2, 2, 4000)
         x, y = np.meshgrid(x, y)
         a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
         def axes():
@@ -201,6 +201,20 @@ class RectangularHyperbola(Conic):
             plt.scatter(self.c2[0], self.c2[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
             plt.scatter(self.c3[0], self.c3[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
             plt.scatter(self.c4[0], self.c4[1], c='#d62728', marker = 'o', zorder = 10, s=msize)
+    def plot_branch1(self, color = 'k'):
+        x = np.linspace(self.center[0], 2, 4000)
+        y = np.linspace(self.center[1], 2, 4000)
+        x, y = np.meshgrid(x, y)
+        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, linewidths = 7)
+    def plot_branch2(self, color = 'k'):
+        x = np.linspace(-2, self.center[0], 4000)
+        y = np.linspace(-2, self.center[1], 4000)
+        x, y = np.meshgrid(x, y)
+        a, b, c, d, e, f = self.coefficients[0], self.coefficients[1], -self.coefficients[0], self.coefficients[2], self.coefficients[3], -1
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors=color, linewidths = 7)
+            
+
 
 
 class Quasar(Conic):
@@ -550,21 +564,24 @@ def WynneSchechter_ACP_construction():
   plt.rcParams["figure.figsize"] = fig_size
   print(result)
   ax = plt.gca()
-  ax.set_xlim(-1.2, 1.2)
-  ax.set_ylim(-1.5, 1.5)
+  ax.set_xlim(-1.3, 1.3)
+  ax.set_ylim(-1.3, 1.3)
   plt.scatter(0,0, s=800, marker='*', c= 'orange', zorder=20)
   plt.axis('off')
 
   result[0][0].plot2('o')
-  result[0][0].quasar_hyperbola.plot()
+  result[0][0].quasar_hyperbola.plot_branch1(color='b')
+  result[0][0].quasar_hyperbola.plot_branch2(color='g')
   plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[1][0].plot2('o')
-  # result[1][0].quasar_hyperbola.plot()
+  # result[1][0].quasar_hyperbola.plot_branch1(color='b')
+  # result[1][0].quasar_hyperbola.plot_branch2(color='g')
   # plt.savefig('wynne_schechter_construction_square.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[2][0].plot2('o')
-  # result[2][0].quasar_hyperbola.plot()
+  # result[2][0].quasar_hyperbola.plot_branch1(color='b')
+  # result[2][0].quasar_hyperbola.plot_branch2(color='g')
   # plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[3][0].plot2('o')
