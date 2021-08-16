@@ -146,7 +146,7 @@ class Quasar(Conic):
 
     self.quasar_rotator(-self.psi)
 
-    self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
+    #self.quasar_hyperbola = RectangularHyperbola(self.c1, self.c2, self.c3, self.c4)
 
     self.theta_23 = self.angle_difference(self.configuration_angles[2], self.configuration_angles[1])
 
@@ -746,17 +746,15 @@ def all_Quasars_random():
       pickle.dump(Quasar_list, fp)
     return Quasar_list
 
-def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
+def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3, zorder = -10 ):
   theta = np.linspace(0, 2*np.pi, 2000)
-
   radius = r
-
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
-  plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
+  plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = zorder)
   y = np.linspace(-0.03,0.03, 100)
   x = r*np.ones_like(y)
-  plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
+  plt.plot(x,y, linewidth = msize, zorder = zorder, color = 'k')
   '''
   x = np.linspace(0.1, r, 4000)
   y = (r**(2/3) - x**(2/3))**3/2  
@@ -1016,14 +1014,14 @@ def Quasar_random_shear_plot():
   return Quasar_list
 
 def Quasar_random_ca_plot_final():
-  N = 50000
+  N = 100000
   random.seed(2)
   Quasar_list = []
   max_causticity = 0.95
   alpha_divisions = 5
   plot_astroid(max_causticity)
   plot_astroid(max_causticity/2)
-  plotting_dictionary = {(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
+  plotting_dictionary = {(0.8, np.pi/2):0,(0.6, np.pi/2):0,(0.5, np.pi/2):0,(0.7, np.pi/2):0,(max_causticity, 0):0, (max_causticity, np.pi/2 - 0.24):0, (max_causticity, np.pi/4):0, (max_causticity, 0.24):0, (max_causticity, np.pi/2):0, (3*max_causticity/4, 0):0, (3*max_causticity/4, np.pi/2):0,  (max_causticity/2,0):0, (max_causticity/2, np.pi/4):0, (max_causticity/2, np.pi/2):0, (max_causticity/4, 0):0, (max_causticity/4, np.pi/2):0, (0, 0):0}
   error_ratio = (np.pi/2)**2
   def rounding_error(a):
       return abs(a-round(a))
@@ -1126,13 +1124,17 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     #L = len(Quasar_list)
     max_causticity = 0.95
     plot_astroid(1)
-    plot_astroid(1/2, mstyle='dashed')
-    plot_astroid(1/4, mstyle='dashed')
-    plot_astroid(3/4, mstyle='dashed')
+    plot_astroid(1/2, mstyle='dashed', zorder = -10)
+    plot_astroid(1/4, mstyle='dashed', zorder = -10)
+    plot_astroid(3/4, mstyle='dashed', zorder = -10)
     Tuple_1 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0], max_causticity, np.pi/2)
-    Q2=deepcopy(Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0])
+    # Q2=deepcopy(Quasar_list[plotting_dictionary[(max_causticity, np.pi/2)][1]][0])
+    # Q2.quasar_rotator(-np.pi/2)
+    # Tuple_2 = (Q2, max_causticity, np.pi)
+    Q2_causticity = 0.7
+    Q2 = Quasar_list[plotting_dictionary[(Q2_causticity, np.pi/2)][1]][0]
     Q2.quasar_rotator(-np.pi/2)
-    Tuple_2 = (Q2, max_causticity, np.pi)
+    Tuple_2 = (Q2, Q2_causticity, np.pi)
     Q3 = Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0]
     Q3.quasar_rotator(np.pi)
     Tuple_3 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0], max_causticity, -np.pi/4)
