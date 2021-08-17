@@ -224,6 +224,9 @@ def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
   a = (1+gamma)*radius*(np.cos(theta))**3
   b = (1-gamma)*radius*(np.sin(theta))**3
   plt.plot(a,b, linestyle = mstyle, linewidth = msize, zorder = -10)
+
+  ax = plt.gca()
+  ax.fill_between(a, b, -b, alpha = 0.1)
   # y = np.linspace(-0.03,0.03, 100)
   # x = r*np.ones_like(y)
   # plt.plot(x,y, linewidth = msize, zorder = -10, color = 'k')
@@ -238,7 +241,7 @@ def plot_astroid(r, gamma = 0, mstyle = 'solid', msize=3):
 def hyperbola_astroid_plot():
   ax = plt.gca()
   ax.set_xlim(-1.2, 1.2)
-  ax.set_ylim(-1.5, 1.5)
+  ax.set_ylim(-1.2, 1.2)
   ax.set_aspect('equal')
   plt.scatter(0,0, s=50, marker='o', c= 'k', zorder=20)
   plt.axis('off')
@@ -283,7 +286,7 @@ def hyperbola_astroid_plot():
   # otherx, othery = np.meshgrid(otherx, othery)
   # plt.contour(otherx, othery,(otherx*othery-x0*othery-y0*otherx), [0], colors=color, zorder = -3, linestyles = 'dashed')
   intersectionx, intersectiony = [-0.16829, -0.8928, 0.9325, -0.07138], [0.9857, 0.4505, 0.3613, -0.9974]
-  plt.scatter(intersectionx, intersectiony, s=200,marker='*', c='darkorange', zorder = 10)
+  plt.scatter(intersectionx, intersectiony, s=200,marker='*', c='g', zorder = 10)
   #angles_to_plot = [eps, np.pi/4, np.pi/2-eps,  np.pi/2+eps, 3*np.pi/4, np.pi-eps, np.pi+eps,-eps, -np.pi/4, -np.pi/2+eps,  -np.pi/2-eps, -3*np.pi/4]
   new_angles_to_plot = [eps, np.pi/6,np.pi/4, np.pi/3,  np.pi/2-eps,  np.pi/2+eps,2*np.pi/3, 3*np.pi/4,5*np.pi/6, np.pi-eps, np.pi+eps,-eps, -np.pi/6,-np.pi/4, -np.pi/3, -np.pi/2+eps,  -np.pi/2-eps, -5*np.pi/6, -3*np.pi/4, -2*np.pi/3]
   for a in new_angles_to_plot:
