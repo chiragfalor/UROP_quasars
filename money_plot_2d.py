@@ -594,12 +594,6 @@ def plot_quasars_shear_1_3_try(Quasar_list, shear):
     ax1.autoscale()
     #ax1.set_title("Max Causticity = "+str(max_causticity))
 
-    fig = matplotlib.pyplot.gcf()
-    fig.set_size_inches(18.5, 10.5)
-    plt.savefig("test.svg", format="svg")
-    plt.savefig('foo.pdf')
-    plt.show()
-
 
 #Quasar_list = Quasar_random_shear_list(1/3)
 
@@ -628,11 +622,14 @@ with open("quasars_shear0_list_new.txt", "rb") as fp:   # Unpickling
 plot_quasars_shear_try2(new_Quasar_list, 0)
 
 
-with open("quasars_shear1_3_list_new.txt", "rb") as fp:   # Unpickling
-  new_Quasar_list = pickle.load(fp)
+# with open("quasars_shear1_3_list_new.txt", "rb") as fp:   # Unpickling
+#   new_Quasar_list = pickle.load(fp)
 
-plot_quasars_shear_1_3_try(new_Quasar_list, 1/3)
-
+# plot_quasars_shear_1_3_try(new_Quasar_list, 1/3)
+fig = plt.gcf()
+fig.set_size_inches(18.5, 10.5)
+plt.savefig("test.svg", format="svg")
+plt.savefig('money_plot_half.pdf',bbox_inches='tight', pad_inches=0)
 plt.show()
 '''
 with open("plot_quasars_shear.txt", "rb") as fp:   # Unpickling
