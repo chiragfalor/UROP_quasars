@@ -505,7 +505,7 @@ def plot_quasars_shear_try2(Quasar_list, shear):
         Q, causticity, astroidal_angle = Quasar_tuple
         radius_ratio = 1/24
         xs,ys = Q.quasar_norm_array[:,0]*radius_ratio/(1+shear) + causticity*(np.cos(astroidal_angle))**3/(1-shear) , Q.quasar_norm_array[:,1]*radius_ratio/(1-shear) + causticity*(np.sin(astroidal_angle))**3/(1+shear)
-        cc = matplotlib.patches.Ellipse((causticity*(np.cos(astroidal_angle))**3/(1-shear) ,causticity*(np.sin(astroidal_angle))**3/(1+shear)), 2*radius_ratio/(1+shear) , 2*radius_ratio/(1-shear), alpha=1, facecolor = 'lemonchiffon', zorder = 1)
+        cc = matplotlib.patches.Ellipse((causticity*(np.cos(astroidal_angle))**3/(1-shear) ,causticity*(np.sin(astroidal_angle))**3/(1+shear)), 2*radius_ratio/(1+shear) , 2*radius_ratio/(1-shear), alpha=1, facecolor = 'aquamarine', zorder = 1)
         # plot the points
         plt.scatter(xs,ys,c='#d62728', marker = 'o', s=msize, zorder=2)
         plt.gca().set_aspect('equal')
@@ -558,7 +558,7 @@ def plot_quasars_shear_1_3_try(Quasar_list, shear):
         Q, causticity, astroidal_angle = Quasar_tuple
         radius_ratio = 1/25
         xs,ys = origin[0] - (Q.quasar_norm_array[:,0]*radius_ratio/(1+shear) + causticity*(np.cos(astroidal_angle))**3/(1-shear)) ,origin[1] - (Q.quasar_norm_array[:,1]*radius_ratio/(1-shear) + causticity*(np.sin(astroidal_angle))**3/(1+shear))
-        cc = matplotlib.patches.Ellipse((origin[0] - causticity*(np.cos(astroidal_angle))**3/(1-shear) ,origin[1] - causticity*(np.sin(astroidal_angle))**3/(1+shear)), 2*radius_ratio/(1+shear) , 2*radius_ratio/(1-shear), alpha=1, facecolor = 'lemonchiffon', zorder = 1)
+        cc = matplotlib.patches.Ellipse((origin[0] - causticity*(np.cos(astroidal_angle))**3/(1-shear) ,origin[1] - causticity*(np.sin(astroidal_angle))**3/(1+shear)), 2*radius_ratio/(1+shear) , 2*radius_ratio/(1-shear), alpha=1, facecolor = 'aquamarine', zorder = 1)
         # plot the points
         plt.scatter(xs,ys,c='#d62728', marker = 'o', s=msize, zorder =2)
         plt.gca().set_aspect('equal')
