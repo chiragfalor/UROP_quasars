@@ -627,7 +627,11 @@ plot_quasars_shear_try2(new_Quasar_list, 0)
 
 # plot_quasars_shear_1_3_try(new_Quasar_list, 1/3)
 fig = plt.gcf()
-fig.set_size_inches(18.5, 10.5)
+fig.set_size_inches(18, 11.5)
+ax =plt.gca()
+ax.set_xlim(-0.1,1.7 )
+ax.set_ylim(-0.1, 1.05)
+
 plt.savefig("test.svg", format="svg")
 plt.savefig('money_plot_half.pdf',bbox_inches='tight', pad_inches=0)
 plt.show()
