@@ -1114,6 +1114,15 @@ def Plot_quasars_shear(Quasar_list):
     plt.savefig('foo.pdf')
     plt.show()
 
+def take_out_quasars(Quasar_list, plotting_dictionary):
+  Tuple_1 = (Quasar_list[plotting_dictionary[(0.95, np.pi/2)][1]][0], 0.95, np.pi/2)
+  Tuple_2 = (Quasar_list[plotting_dictionary[(0.75, np.pi/2)][1]][0], 0.75, np.pi/2)
+  Tuple_3 = (Quasar_list[plotting_dictionary[(0.7, np.pi/2)][1]][0], 0.7, np.pi/2)
+  Tuple_4 = (Quasar_list[plotting_dictionary[(0.6, np.pi/2)][1]][0], 0.6, np.pi/2)
+  Tuple_5 = (Quasar_list[plotting_dictionary[(0.5, np.pi/2)][1]][0], 0.5, np.pi/2)
+  Quasar_list = [Tuple_1, Tuple_2, Tuple_3, Tuple_4, Tuple_5]
+  with open("quasar_ca_3.txt", "wb") as fp:   #Pickling
+    pickle.dump(Quasar_list, fp)  
 
 def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     i = 0
@@ -1138,7 +1147,7 @@ def Plot_quasars_4sided(Quasar_list, plotting_dictionary):
     Q3 = Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0]
     Q3.quasar_rotator(np.pi)
     Tuple_3 = (Quasar_list[plotting_dictionary[(max_causticity, np.pi/4)][1]][0], max_causticity, -np.pi/4)
-    new_Quasar_list=[Tuple_1, Tuple_2, Tuple_3]
+    new_Quasar_list = [Tuple_1, Tuple_2, Tuple_3]
 
     #plt.arrow(0,0,0.5, 0.9)
     #plt.annotate("", xy=(0.5, 0.9), xytext=(0, -0.005), arrowprops={"arrowstyle":"->", "width": 10})
@@ -1344,6 +1353,7 @@ with open("new_plot_4ca_dict.txt", "rb") as fp:   # Unpickling
 print(new_plotting_dictionary[(0.95, np.pi/2)][1])
 Plot_quasars_4sided(new_Quasar_list, new_plotting_dictionary)
 
+take_out_quasars(new_Quasar_list, new_plotting_dictionary)
 '''
 with open("new_plot_ca.txt", "rb") as fp:   # Unpickling
   new_Quasar_list = pickle.load(fp)
