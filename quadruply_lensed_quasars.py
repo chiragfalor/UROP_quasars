@@ -569,9 +569,11 @@ def WynneSchechter_ACP_construction():
   plt.scatter(0,0, s=800, marker='*', c= 'orange', zorder=20)
   plt.axis('off')
 
-  result[0][0].plot2('o')
-  result[0][0].quasar_hyperbola.plot_branch1(color='b')
-  result[0][0].quasar_hyperbola.plot_branch2(color='g')
+  i = 4
+
+  result[i][0].plot2('o')
+  result[i][0].quasar_hyperbola.plot_branch1(color='b')
+  result[i][0].quasar_hyperbola.plot_branch2(color='g')
   plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[1][0].plot2('o')
