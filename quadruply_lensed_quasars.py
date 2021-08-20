@@ -500,7 +500,7 @@ class Quasar(Conic):
       e.plot()
       # plot the points
       if marker_shape=='o':
-        plt.scatter(xs,ys,c='r', marker = marker_shape, zorder = 3, s=400)
+        plt.scatter(xs,ys,c='r', marker = marker_shape, zorder = 3, s=1000)
       else:
         plt.scatter(xs,ys,c='#d62728', marker = marker_shape, zorder = 2, s=160)
       plt.gca().set_aspect('equal')
@@ -558,6 +558,9 @@ def WynneSchechterConstructionPlot():
 def WynneSchechter_ACP_construction():
   with open("quasar_ca_2.txt", "rb") as fp:   # Unpickling
     result = pickle.load(fp)
+
+  with open("quasar_ca_3.txt", "rb") as fp:   # Unpickling
+    new_result = pickle.load(fp)
   #plot_causticity_astroidal_angle(new_Quasar_list)
   
   fig_size= [8,8]
@@ -569,12 +572,18 @@ def WynneSchechter_ACP_construction():
   plt.scatter(0,0, s=800, marker='*', c= 'orange', zorder=20)
   plt.axis('off')
 
-  i = 4
 
-  result[i][0].plot2('o')
-  result[i][0].quasar_hyperbola.plot_branch1(color='b')
-  result[i][0].quasar_hyperbola.plot_branch2(color='g')
-  plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
+  def plot_special_quasar(i):
+    c1, c2, c3, c4 = new_result[i][0].quasar_norm_array
+    Q = Quasar(c1, c2, c3)
+    Q.plot2('o')
+    Q.quasar_hyperbola.plot_branch1(color='b')
+    Q.quasar_hyperbola.plot_branch2(color='g')
+
+  # result[0][0].plot2('o')
+  # result[0][0].quasar_hyperbola.plot_branch1(color='b')
+  # result[0][0].quasar_hyperbola.plot_branch2(color='g')
+  # plt.savefig('wynne_schechter_construction_mouse_ears.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[1][0].plot2('o')
   # result[1][0].quasar_hyperbola.plot_branch1(color='b')
@@ -584,7 +593,8 @@ def WynneSchechter_ACP_construction():
   # result[2][0].plot2('o')
   # result[2][0].quasar_hyperbola.plot_branch1(color='b')
   # result[2][0].quasar_hyperbola.plot_branch2(color='g')
-  # plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
+  plot_special_quasar(4)
+  plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[3][0].plot2('o')
   # result[3][0].quasar_hyperbola.plot()
