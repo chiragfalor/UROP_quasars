@@ -67,10 +67,10 @@ class Circle(Conic):
             plt.axvline(0, alpha=.1)
         axes()
         plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k')
-        plt.plot(self.c1[0], self.c1[1], 'r+')
-        plt.plot(self.c2[0], self.c2[1], 'r+')
-        plt.plot(self.c3[0], self.c3[1], 'r+')
-        plt.show()
+        # plt.plot(self.c1[0], self.c1[1], 'r+')
+        # plt.plot(self.c2[0], self.c2[1], 'r+')
+        # plt.plot(self.c3[0], self.c3[1], 'r+')
+        # plt.show()
 
 class AlignedEllipse(Conic):
     def __init__(self, c1, c2, c3, c4, iscentered=False):
@@ -141,7 +141,7 @@ class AlignedEllipse(Conic):
             plt.axhline(0, alpha=.1)
             plt.axvline(0, alpha=.1)
         axes()
-        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=7)
+        plt.contour(x, y,(a*x**2 + b*x*y + c*y**2 + d*x + e*y + f), [0], colors='k', linewidths=2)
         #plt.scatter(0, 0, c='c', marker = 'o', zorder = 10, s=100)
         # plt.plot(self.c1[0], self.c1[1], 'r+')
         # plt.plot(self.c2[0], self.c2[1], 'r+')
@@ -593,15 +593,65 @@ def WynneSchechter_ACP_construction():
   # result[2][0].plot2('o')
   # result[2][0].quasar_hyperbola.plot_branch1(color='b')
   # result[2][0].quasar_hyperbola.plot_branch2(color='g')
-  plot_special_quasar(4)
-  plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
+  # plot_special_quasar(4)
+  # plt.savefig('wynne_schechter_construction_kite.pdf', bbox_inches = 'tight',pad_inches = 0)
 
   # result[3][0].plot2('o')
   # result[3][0].quasar_hyperbola.plot()
 
   plt.show()
 
-WynneSchechter_ACP_construction()
+#WynneSchechter_ACP_construction()
+
+def Eccentric_anomaly(gamma = 1/2, theta=np.pi/3):
+  fig_size= [6,6]
+  plt.rcParams["figure.figsize"] = fig_size
+  E = AlignedEllipse((1+gamma,0), (0, 1-gamma), (0, gamma-1), (-1-gamma, 0))
+  E.plot()
+  plt.scatter((1+gamma)*np.cos(theta), (1-gamma)*np.sin(theta), s=100, zorder = 5)
+  C = Circle((1,0), (0,1), (-1, 0))
+  cc = plt.Circle((0,0), 1 , alpha=0.1)
+  #C.plot()
+  plt.scatter(np.cos(theta), np.sin(theta), s=100, zorder = 5)
+  ax = plt.gca()
+  ax.add_artist(cc)
+  ax.annotate("$1+\gamma $",
+            xy=(1+gamma, 0), xycoords='data',
+            xytext=(0.5, -0.05), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = 10
+            )
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(0.5, 0), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = 10
+            )
+  ax.annotate("$1-\gamma $",
+            xy=(0, 1-gamma), xycoords='data',
+            xytext=(-0.15, 0.2), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = 10
+            )
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(0, 0.2), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = 10
+            )
+  ax.annotate(r'$((1+\gamma) \cos \theta , (1-\gamma) \sin \theta )$', xy = ((1+gamma)*np.cos(theta)-0.1, (1-gamma)*np.sin(theta)+0.1), size = 10)
+  ax.annotate(r'$( \cos \theta , \sin \theta )$', xy = (np.cos(theta), np.sin(theta)+0.1), size = 10)
+  
+
+  ax.set_xlim(-2, 2)
+  ax.set_ylim(-1.2, 1.2)
+  ax.set_aspect('equal')
+  plt.axis('off')
+  plt.savefig('eccentric_anomaly.pdf', bbox_inches = 'tight',pad_inches = 0)
+  plt.show()
+
+Eccentric_anomaly()
+
 
 def Quasar_test():
     Quasar_list = []
