@@ -133,6 +133,9 @@ class AlignedEllipse(Conic):
         return (x**2, y**2, x, y)
 
     def plot(self, color='k'):
+        '''
+        plots the ellipse with the given color
+        ''' 
         x = np.linspace(-2, 2, 400)
         y = np.linspace(-2, 2, 400)
         x, y = np.meshgrid(x, y)
@@ -301,5 +304,88 @@ def Plot_Eccentric_anomaly_fig(gamma = -1/4, theta=1):
   plt.savefig('eccentric_anomaly.pdf', bbox_inches = 'tight',pad_inches = 0)
   plt.show()
 
-Plot_Eccentric_anomaly_fig(gamma = -1/3, theta=0.9)
+# Plot_Eccentric_anomaly_fig(gamma = -1/3, theta=0.9)
 
+def Plot_Eccentric_anomaly_fig_try2(gamma = 1/4, theta=0.5):
+  fig_size= [6,6]
+  plt.rcParams["figure.figsize"] = fig_size
+  E = AlignedEllipse((1/(1+gamma),0), (0, 1/(1-gamma)), (0, -1/(1-gamma)), (-1/(1+gamma), 0))
+  E.plot('b')
+  theta_tilde =  np.arctan((1+gamma)/(1-gamma)*np.tan(theta))
+  plt.scatter(np.cos(theta)/(1+gamma), np.sin(theta)/(1-gamma), s=100, zorder = 5)
+  # cnew = plt.Circle((0,0), 1/(1+gamma) , alpha=0.1, facecolor='green', edgecolor='green', zorder = -10, linewidth = 5)
+  C = plt.Circle((0,0), 1/(1-gamma) , alpha=1, facecolor='white', edgecolor='green', zorder = -8, linewidth = 2)
+  plt.gca().add_patch(C)
+  # plt.gca().add_patch(cnew)
+  #C.plot()
+  # plt.scatter(np.cos(theta), np.sin(theta), s=100, zorder = 5)
+  plt.scatter(np.cos(theta)/(1-gamma), np.sin(theta)/(1-gamma), s=100, zorder = 5, color = 'green')
+  ax = plt.gca()
+  txtsize = 14
+  ax.annotate(r"$\frac{b}{1+\gamma} $",
+            xy=(-1/(1+gamma), 0), xycoords='data',
+            xytext=(-0.55, -0.05), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(-0.25, 0), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  ax.annotate(r"$\frac{b}{1-\gamma} $",
+            xy=(0, -1/(1-gamma)), xycoords='data',
+            xytext=(-0.15, -0.7), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(0, -0.5), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  ax.annotate(r'$\left( \frac{b\cos \eta}{1+\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1+gamma)-1, np.sin(theta)/(1-gamma)), size = txtsize, weight = 'bold')
+  
+  ax.annotate(r'$\left( \frac{b\cos \eta}{1-\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1-gamma)-0.5, np.sin(theta)/(1-gamma)+0.15), size = txtsize, weight = 'bold')
+  # draw a line passing through the origin at an angle of theta
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(np.cos(theta)/(1-gamma), np.sin(theta)/(1-gamma)), textcoords='data',
+            arrowprops=dict(arrowstyle="-",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  # draw a line passing through the origin at an angle of theta_tilde
+  ax.annotate("",
+            xy=(0, 0), xycoords='data',
+            xytext=(np.cos(theta)/(1+gamma), np.sin(theta)/(1-gamma)), textcoords='data',
+            arrowprops=dict(arrowstyle="-",
+                            connectionstyle="arc3"), size = txtsize 
+  )           
+  # draw a vertical line passing through point on circle at angle theta
+  ax.annotate("",
+            xytext=(np.cos(theta)/(1-gamma), np.sin(theta)/(1-gamma)), xycoords='data',
+            xy=(np.cos(theta)/(1+gamma), np.sin(theta)/(1-gamma)), textcoords='data',
+            arrowprops=dict(arrowstyle="->",
+                            connectionstyle="arc3"), size = txtsize
+            )
+  # curved arc of radius 0.5 near origin which spans theta
+  ac = matplotlib.patches.Arc((0,0), 0.5, 0.5, theta1 = 0, theta2 = theta*180/np.pi, linewidth = 2, zorder = 20)
+  ax.add_patch(ac)
+  # label the arc
+  ax.annotate(r'$\eta$', xy = (0.1, 0), xytext = (0.26, 0.03), size = txtsize)
+  # curved arc of radius 1 near origin which spans theta_tilde
+  ac_tilde = matplotlib.patches.Arc((0,0), 1, 1, theta1 = 0, theta2 = theta_tilde*180/np.pi, linewidth = 2, zorder = 20)
+  # label tilde arc
+  ax.annotate(r'$\theta$', xy = (0.1, 0), xytext = (0.5, 0.1), size = txtsize)
+  ax.add_patch(ac_tilde)
+  # set the limits of the plot
+  ax.set_xlim(-1.8, 2)
+  ax.set_ylim(-1.55, 1.55)
+  ax.set_aspect('equal')
+  plt.axis('off')
+  plt.savefig('eccentric_anomaly2.pdf', bbox_inches = 'tight',pad_inches = 0)
+  plt.show()
+
+Plot_Eccentric_anomaly_fig_try2()
