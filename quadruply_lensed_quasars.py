@@ -346,9 +346,9 @@ def Plot_Eccentric_anomaly_fig_try2(gamma = 1/4, theta=0.5):
             arrowprops=dict(arrowstyle="->",
                             connectionstyle="arc3"), size = txtsize
             )
-  ax.annotate(r'$\left( \frac{b\cos \eta}{1+\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1+gamma)-1, np.sin(theta)/(1-gamma)), size = txtsize, weight = 'bold')
+  ax.annotate(r'$\left( \frac{b\cos \eta}{1+\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1+gamma)-0.9, np.sin(theta)/(1-gamma)), size = txtsize, weight = 'bold')
   
-  ax.annotate(r'$\left( \frac{b\cos \eta}{1-\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1-gamma)-0.5, np.sin(theta)/(1-gamma)+0.15), size = txtsize, weight = 'bold')
+  ax.annotate(r'$\left( \frac{b\cos \eta}{1-\gamma} , \frac{b\sin \eta}{1-\gamma} \right)$', xy = (np.cos(theta)/(1-gamma)-0.47, np.sin(theta)/(1-gamma)+0.15), size = txtsize, weight = 'bold')
   # draw a line passing through the origin at an angle of theta
   ax.annotate("",
             xy=(0, 0), xycoords='data',
@@ -381,8 +381,9 @@ def Plot_Eccentric_anomaly_fig_try2(gamma = 1/4, theta=0.5):
   ax.annotate(r'$\theta$', xy = (0.1, 0), xytext = (0.5, 0.1), size = txtsize)
   ax.add_patch(ac_tilde)
   # set the limits of the plot
-  ax.set_xlim(-1.8, 2)
-  ax.set_ylim(-1.55, 1.55)
+  ax.set_xlim(-1.55, 1.55)
+  # ax.set_xlim(-1.8, 2)
+  ax.set_ylim(-1.5, 1.5)
   ax.set_aspect('equal')
   plt.axis('off')
   plt.savefig('eccentric_anomaly2.pdf', bbox_inches = 'tight',pad_inches = 0)
